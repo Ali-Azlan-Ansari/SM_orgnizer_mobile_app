@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as eva from '@eva-design/eva';
 import { ApplicationProvider, IconRegistry, Layout,Text } from '@ui-kitten/components';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { IndexPath, Select, SelectItem } from '@ui-kitten/components';
 import { Scanner } from './components/Scanner';
 import { EvaIconsPack } from '@ui-kitten/eva-icons';
@@ -10,7 +10,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import FontAwesome6 from '@react-native-vector-icons/fontawesome6';
 import { backgroundColor, primaryColor } from './components/Color';
 import ActiveSubject from './components/ActiveSubject';
-import { SetActiveSubject } from './components/SetActiveSubject';
 import { TopNavigationAccessoriesShowcase } from './components/TopNavigationAccessoriesShowcase';
 import SubjectManager from './components/SubjectManager';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -20,6 +19,11 @@ import ImageGalleryScreen from './components/ImageGalleryScreen';
 import MyGallery from './components/ImageGalleryScreen';
 import { getDBConnection, setupDatabaseTables } from './DataBase/db';
 import HelpGuide from './components/Help';
+import Splash from './components/SplashScreen';
+import LottieView from 'lottie-react-native';
+import Tools from './components/Tools';
+import PDFManager from './components/PDFManager'
+
 
 
 const Stack = createStackNavigator();
@@ -53,8 +57,8 @@ const TabNav=()=>(
     switch (route.name) {
       case 'Active':
         return <FontAwesome6 name="book-open" size={size} color={color} iconStyle="solid" />;
-      case 'Set Active':
-        return <FontAwesome6 name="list-check" size={size} color={color} iconStyle="solid" />;
+      case 'Tools':
+        return <FontAwesome6 name="wrench" size={size} color={color} iconStyle="solid" />;
       case 'Scanner':
         return <FontAwesome6 name="camera-retro" size={size} color={color} iconStyle="solid" />;
       case 'Subject':
@@ -69,7 +73,7 @@ const TabNav=()=>(
 
 >
   <Tab.Screen name="Active" component={ActiveSubject} />
-  <Tab.Screen name="Set Active" component={SetActiveSubject} />
+  <Tab.Screen name="Tools" component={Tools} />
   <Tab.Screen name="Scanner" component={Scanner} />
   <Tab.Screen name="Subject" component={SubjectManager} />
   <Tab.Screen name="Help" component={HelpGuide} />
@@ -82,6 +86,7 @@ const StackNav=()=>(
   <Stack.Screen name="AddSubject" component={AddSubject} />
   <Stack.Screen name="EditSubject" component={EditSubject} />
   <Stack.Screen name="ImageGalleryScreen" component={MyGallery} />
+  <Stack.Screen name="PDFManager" component={PDFManager} />
   
 </Stack.Navigator>
 )
@@ -98,13 +103,26 @@ const styles = StyleSheet.create({
   container: {
     height:100,
   },
-});
+  containerSP: {
+    flex: 1,
+    margin: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  animation: {
+    width: '100%', // or fixed size like 200
+    height: '100%',
+  },
+}
+);
 
 
 
 const Tab = createBottomTabNavigator();
  
 export default () =>{
+
+   const [isloading, setIsLoading] = useState<boolean>(true);
   useEffect(() => {
     const initDB = async () => {
       try {
@@ -118,7 +136,11 @@ export default () =>{
     initDB();
   }, []);
 
-  return (
+  return isloading ? (<>
+
+    <Splash setIsLoading={setIsLoading}/>
+
+  </>):(
   <>
   <IconRegistry icons={EvaIconsPack} />
   <ApplicationProvider {...eva} theme={eva.dark}>

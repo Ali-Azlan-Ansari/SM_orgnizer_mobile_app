@@ -13,8 +13,9 @@ import { TopNavigationAccessoriesShowcase } from './TopNavigationAccessoriesShow
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { getActiveSubjects, getDBConnection, Subject } from '../DataBase/db';
 import Loader from './Loader';
+import FontAwesome6 from '@react-native-vector-icons/fontawesome6';
 
-const ActiveSubject = () => {
+const Tools = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const navigation = useNavigation<any>();
@@ -38,8 +39,10 @@ const ActiveSubject = () => {
     }
   }, [isFocused]);
 
-  const cardPairs: Subject[][] = [];
-  const data = subjects;
+  const cardPairs: {name:string}[][] = [];
+  const data = [{name:"PDF",icon:"file-pdf",nav:()=>{navigation.navigate("PDFManager")}},
+       {name:"GPA Progress",icon:"graduation-cap",nav:()=>{}},
+{name:"Class Notifications",icon:"clock",nav:()=>{}}];
 
   for (let i = 0; i < data.length; i += 2) {
     cardPairs.push(data.slice(i, i + 2));
@@ -56,35 +59,13 @@ const ActiveSubject = () => {
             {pair.map((item, colIndex) => (
               <TouchableWithoutFeedback
                 key={colIndex}
-                onPress={() =>
-                  navigation.navigate('ImageGalleryScreen', {
-                    subjectId: item.id,
-                  })
+                onPress={
+                  item.nav
                 }
               >
                 <View style={styles.card}>
-                  <Text style={styles.title}>{item.name}</Text>
-                  <Text style={styles.subtitle}>
-                    Teacher: {item.teacher_name}
-                  </Text>
-                  <Text style={styles.subtitle}>
-                    Abbr: {item.abbreviation}
-                  </Text>
-                  <Text style={styles.subtitle}>
-                    Semester: {item.semester}
-                  </Text>
-                  <Text style={styles.subtitle}>
-                    Date:
-                    {item.date
-                      ? new Date(item.date)
-                          .toLocaleDateString('en-US', {
-                            year: '2-digit',
-                            month: '2-digit',
-                            day: '2-digit',
-                          })
-                          .replace(/\//g, '-')
-                      : 'No date'}
-                  </Text>
+                  <FontAwesome6 name={item.icon} size={100} style={[styles.icon]} iconStyle="solid" />
+                  <Text   numberOfLines={2}  ellipsizeMode='tail' style={styles.title}>{item.name}</Text>
                 </View>
               </TouchableWithoutFeedback>
             ))}
@@ -105,6 +86,10 @@ const screenWidth = Dimensions.get('window').width;
 const cardWidth = (screenWidth - 48) / 2;
 
 const styles = StyleSheet.create({
+  icon:{
+    color:primaryColor,
+    flexWrap: 'wrap'
+  },
   screen: {
     flex: 1,
     backgroundColor: '#212b46',
@@ -121,10 +106,10 @@ const styles = StyleSheet.create({
   card: {
     width: cardWidth,
     backgroundColor: '#fff',
-    padding: 10,
+    padding:10,
     borderRadius: 12,
-    alignItems: 'flex-start',
-    justifyContent: 'flex-start',
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -139,6 +124,10 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     marginBottom: 8,
+    margin:10,
+    flexWrap: 'wrap',        // allow wrapping
+    includeFontPadding: false,
+    textAlign: 'center',       // ya "justify"
     color: baseBGColor,
   },
 
@@ -163,4 +152,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ActiveSubject;
+export default Tools;

@@ -6,6 +6,10 @@ import {
   Dimensions,
   FlatList,
   View,
+  Alert,
+  Linking,
+  Platform,
+  PermissionsAndroid,
 } from 'react-native';
 import DocumentScanner, { ScanDocumentResponse } from 'react-native-document-scanner-plugin';
 import { Button, Layout } from '@ui-kitten/components';
@@ -15,6 +19,7 @@ import { TopNavigationAccessoriesShowcase } from './TopNavigationAccessoriesShow
 import { addImages, getActiveSubjects, getDBConnection, Subject } from '../DataBase/db';
 import { ModalKitten, ModalKittenHandle } from './Modal';
 import Loader from './Loader';
+import RNFS from 'react-native-fs';
 
 const { width } = Dimensions.get('window');
 
@@ -77,6 +82,9 @@ export const Scanner = () => {
       croppedImageQuality: 100,
       responseType: "imageFilePath",
     });
+
+
+
      setScannedImages(result.scannedImages!)
 
     if(result?.scannedImages?.length){
@@ -88,13 +96,118 @@ export const Scanner = () => {
   }
   };
 
-  const addImagesInSubject =async(subId: number, scannedImages?: string[])=>{
-    setLoading(true);
+  // const addImagesInSubject =async(subId: number, scannedImages?: string[])=>{
+  //   setLoading(true);
+  //   try {
+  //     if (scannedImages?.length != undefined && scannedImages?.length > 0) {
+  //       const db = await getDBConnection();
+
+        
+  //     const downloadPath =
+  //            RNFS.DownloadDirectoryPath ||
+  //            RNFS.ExternalStorageDirectoryPath + '/Images';
+
+
+  //       await addImages(db, subId, scannedImages);
+  //       handlePress('Image add in subject', 1000, 'success');
+  //        navigation.navigate('ImageGalleryScreen', {
+  //                   subjectId: subId,
+  //        })
+  //     } else {
+  //       handlePress('some thing want wrong', 1000, 'error');
+  //     }
+  //   } catch (err) {
+  //     console.error('Add images error:', err);
+  //     handlePress('some thing want wrong', 1000, 'error');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }
+
+   const requestImagePermissions = async (): Promise<boolean> => {
+      
+      if (Platform.OS !== 'android') return true;
+  
+      const sdkInt = parseInt(String(Platform.Version), 10);
+      const permissions: any[] = [];
+  
+      if (sdkInt >= 33) {
+        permissions.push(PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES);
+      } else {
+        permissions.push(PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE);
+      }
+  
+      try {
+        const granted: any = await PermissionsAndroid.requestMultiple(
+          permissions,
+        );
+  
+        for (let perm of permissions) {
+          if (granted[perm] === 'never_ask_again') {
+            Alert.alert(
+              'Permission Required',
+              'Permission is permanently denied. Please enable it in settings.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Open Settings', onPress: () => Linking.openSettings() },
+              ],
+            );
+            return false;
+          } else if (granted[perm] !== 'granted') {
+            return false;
+          }
+        }
+  
+        return true;
+      } catch (err) {
+        console.warn('Permission error:', err);
+        return false;
+      }
+    };
+  
+const copyScannedImages = async (scannedImages: string[]) => {
+
+  const hasPermission = await requestImagePermissions();
+        if (!hasPermission) {
+          Alert.alert('Permission Denied', 'Cannot save Image without permission.');
+          return;
+        }
+
+  const targetFolder = Platform.OS === 'android'
+            ? RNFS.ExternalDirectoryPath + '/Images' 
+            : RNFS.DocumentDirectoryPath + '/Images'; 
+  const exists = await RNFS.exists(targetFolder);
+  if (!exists) {
+    await RNFS.mkdir(targetFolder);
+  }
+
+  const newPaths: string[] = [];
+
+  for (let srcPath of scannedImages) {
+    const fileName = srcPath.split('/').pop();
+    const destPath = `${targetFolder}/${fileName}`;
     try {
-      if (scannedImages?.length != undefined && scannedImages?.length > 0) {
+      await RNFS.copyFile(srcPath, destPath);   // ✅ copy instead of move
+      newPaths.push(destPath);
+      console.log(`Copied: ${srcPath} -> ${destPath}`);
+    } catch (err) {
+      console.error('Copy error:', err);
+    }
+  }
+
+  return newPaths;
+};
+
+const addImagesInSubject = async (subId: number, scannedImages?: string[]) => {
+  if (!scannedImages?.length) return;
+  setLoading(true);
+  const db = await getDBConnection();
+  const movedPaths = await copyScannedImages(scannedImages);
+    try {
+      if (movedPaths !== undefined && movedPaths.length > 0) {
         const db = await getDBConnection();
-        await addImages(db, subId, scannedImages);
-        handlePress('Image add in subject', 1000, 'success');
+        await addImages(db, subId, movedPaths);
+        handlePress('Image added in subject', 1000, 'success');
          navigation.navigate('ImageGalleryScreen', {
                     subjectId: subId,
          })
@@ -107,7 +220,9 @@ export const Scanner = () => {
     } finally {
       setLoading(false);
     }
-  }
+};
+
+
 
   useEffect(() => {
     const fetchActiveSubjects = async () => {
@@ -138,7 +253,7 @@ export const Scanner = () => {
     <Layout style={styles.container} level="1">
       {/* Header */}
       <Layout>
-        <TopNavigationAccessoriesShowcase rout="" title='Scanner' />
+        <TopNavigationAccessoriesShowcase title='Scanner' />
       </Layout>
 
       {/* Image Section */}

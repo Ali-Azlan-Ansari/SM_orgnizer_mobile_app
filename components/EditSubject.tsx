@@ -14,6 +14,7 @@ const EditSubject = ({ route }: any): React.ReactElement => {
   const [teacherName, setTeacherName] = useState('');
   const [abbreviation, setAbbreviation] = useState('');
   const [semester, setSemester] = useState('');
+   const [Active, setActive] = useState<number|undefined>(undefined);
 
   const [subjectError, setSubjectError] = useState('');
   const [teacherError, setTeacherError] = useState('');
@@ -40,6 +41,7 @@ const EditSubject = ({ route }: any): React.ReactElement => {
         setTeacherName(subject.teacher_name || '');
         setAbbreviation(subject.abbreviation || '');
         setSemester(subject.semester || '');
+        setActive(subject.active_subject || 0)
       } else {
         Alert.alert('Not Found', 'Subject not found');
         navigation.goBack();
@@ -103,7 +105,7 @@ const EditSubject = ({ route }: any): React.ReactElement => {
         teacher_name: teacherName.trim(),
         abbreviation: abbreviation.trim(),
         semester: semester.trim(),
-        active_subject: 0,
+        active_subject: Active,
         date: new Date().toISOString(),
       });
 
@@ -129,7 +131,7 @@ const EditSubject = ({ route }: any): React.ReactElement => {
 
   return (
     <View style={styles.container}>
-      <TopNavigationAccessoriesShowcase rout="Subject" title="Edit Subject" />
+      <TopNavigationAccessoriesShowcase title="Edit Subject" />
       <ScrollView style={styles.scroll}>
         <Input
           label="Subject Name"

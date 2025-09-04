@@ -79,7 +79,7 @@ const AddSubject = (): React.ReactElement => {
         teacher_name: teacherName.trim(),
         abbreviation: abbreviation.trim(),
         semester: semester.trim(),
-        active_subject: 0,
+        active_subject: 1,
         date: new Date().toISOString(),
       });
 
@@ -110,7 +110,7 @@ const AddSubject = (): React.ReactElement => {
 
   return (
     <View style={styles.container}>
-      <TopNavigationAccessoriesShowcase rout="Subject" title="Add Subject" />
+      <TopNavigationAccessoriesShowcase title="Add Subject" />
       <ScrollView style={styles.scroll}>
         <Input
           label="Subject Name"

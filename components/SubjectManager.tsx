@@ -9,6 +9,7 @@ import {
   Text,
   Modal,
   Card,
+  Toggle,
 } from '@ui-kitten/components';
 import FontAwesome6 from '@react-native-vector-icons/fontawesome6';
 import { TopNavigationAccessoriesShowcase } from './TopNavigationAccessoriesShowcase';
@@ -17,31 +18,25 @@ import {
   deleteSubjectById,
   getAllSubjects,
   getDBConnection,
+  updateSubject,         // ✅ import updateSubject
   Subject,
 } from '../DataBase/db';
 import { ModalKitten, ModalKittenHandle } from './Modal';
 import { backgroundColor, baseBGColor } from './Color';
-import Loader from './Loader'; // ✅ Import Loader
+import Loader from './Loader';
 
 // ICONS
 const PlusIcon = () => (
   <FontAwesome6 name="plus" style={[styles.icon]} iconStyle="solid" />
 );
-
 const EditIcon = () => (
   <FontAwesome6 name="pen" style={[styles.icon]} iconStyle="solid" />
 );
-
 const DeleteIcon = () => (
   <FontAwesome6 name="trash" style={[styles.icon]} iconStyle="solid" />
 );
-
 const SearchIcon = () => (
-  <FontAwesome6
-    name="magnifying-glass"
-    style={[styles.icon]}
-    iconStyle="solid"
-  />
+  <FontAwesome6 name="magnifying-glass" style={[styles.icon]} iconStyle="solid" />
 );
 
 const SubjectManager = () => {
@@ -49,7 +44,7 @@ const SubjectManager = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false); // ✅ Loader state
+  const [loading, setLoading] = useState(false);
 
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
@@ -57,12 +52,12 @@ const SubjectManager = () => {
 
   const fetchData = async () => {
     try {
-      setLoading(true); // ✅ Show loader
+      setLoading(true);
       const db = await getDBConnection();
       const result = await getAllSubjects(db);
       setSubjects(result);
     } finally {
-      setLoading(false); // ✅ Hide loader
+      setLoading(false);
     }
   };
 
@@ -74,7 +69,7 @@ const SubjectManager = () => {
   const deleteSubject = async () => {
     if (!selectedId) return;
     try {
-      setLoading(true); // ✅ Show loader while deleting
+      setLoading(true);
       const db = await getDBConnection();
       await deleteSubjectById(db, selectedId);
       await fetchData();
@@ -85,7 +80,7 @@ const SubjectManager = () => {
     } finally {
       setConfirmVisible(false);
       setSelectedId(null);
-      setLoading(false); // ✅ Hide loader
+      setLoading(false);
     }
   };
 
@@ -95,12 +90,52 @@ const SubjectManager = () => {
     }
   }, [isFocused]);
 
-  const renderItem = ({ item }: any) => (
+  // ✅ Toggle handler per row
+  const onToggleActive = async (subject: Subject, nextChecked: boolean) => {
+    try {
+      setLoading(true);
+      const db = await getDBConnection();
+      const updated = {
+        ...subject,
+        active_subject: nextChecked ? 1 : 0,
+      };
+      await updateSubject(db, subject.id!, updated);
+    
+
+      // Update local list to reflect the change instantly
+      setSubjects(prev =>
+        prev.map(s => (s.id === subject.id ? { ...s, active_subject: updated.active_subject } : s)),
+      );
+    } catch (e) {
+      console.error('Toggle update failed:', e);
+      modalRef.current?.show('Failed to update subject status', 2000, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredSubjects = subjects.filter(s => {
+    const q = value.toLowerCase();
+    return (
+      s.name?.toLowerCase().includes(q) ||
+      s.abbreviation?.toLowerCase().includes(q) ||
+      s.teacher_name?.toLowerCase().includes(q)
+    );
+  });
+
+  const renderItem = ({ item }: { item: Subject }) => (
     <ListItem
       title={`${item.name}`}
-      description={`${item.abbreviation} | ${item.date?.slice(0, 10)}`}
+      description={`${item.abbreviation ?? ''} | ${item.date?.slice(0, 10) ?? ''}`}
       accessoryRight={() => (
         <View style={styles.iconButtonContainer}>
+          {/* ✅ Per-row Toggle bound to this subject */}
+          <Toggle
+            style={styles.toggle}
+            status="success"
+            checked={item.active_subject === 1}
+            onChange={nextChecked => onToggleActive(item, !!nextChecked)}
+          />
           <Button
             onPress={() => navigation.navigate('EditSubject', { id: item.id })}
             style={styles.iconButton}
@@ -109,7 +144,7 @@ const SubjectManager = () => {
             accessoryLeft={EditIcon}
           />
           <Button
-            onPress={() => handleDeletePress(item.id)}
+            onPress={() => handleDeletePress(item.id!)}
             style={styles.iconButton}
             size="tiny"
             status="danger"
@@ -123,8 +158,9 @@ const SubjectManager = () => {
   return (
     <>
       <View>
-        <TopNavigationAccessoriesShowcase rout="" title="Subject Management" />
+        <TopNavigationAccessoriesShowcase title="Subject Management" />
       </View>
+
       <Layout style={styles.mainContainer} level="1">
         {/* Toolbar */}
         <View style={styles.topBar}>
@@ -145,16 +181,7 @@ const SubjectManager = () => {
         </View>
 
         {/* Subject List */}
-        <List
-          style={styles.list}
-          data={subjects.filter(
-            subject =>
-              subject.name.toLowerCase().includes(value.toLowerCase()) ||
-              subject.abbreviation?.toLowerCase().includes(value.toLowerCase()) ||
-              subject.teacher_name?.toLowerCase().includes(value.toLowerCase()),
-          )}
-          renderItem={renderItem}
-        />
+        <List style={styles.list} data={filteredSubjects} renderItem={renderItem} />
       </Layout>
 
       {/* Loader */}
@@ -237,6 +264,7 @@ const styles = StyleSheet.create({
   iconButtonContainer: {
     flexDirection: 'row',
     gap: 8,
+    alignItems: 'center',
   },
   iconButton: {
     borderRadius: 25,
@@ -271,5 +299,8 @@ const styles = StyleSheet.create({
   confirmButton: {
     borderRadius: 8,
     minWidth: 100,
+  },
+  toggle: {
+    marginRight: 6,
   },
 });

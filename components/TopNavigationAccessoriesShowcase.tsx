@@ -16,20 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 
 const navigation = useNavigation();
 
-  const handleBackPress = (rout:String) => {
-console.log("hello")
-    if(rout){
-      navigation.navigate(rout)
-    }else{
-      if(navigation.canGoBack()){
-      navigation.goBack()
-      }
-    }  
-  };
-
-
-
-export const TopNavigationAccessoriesShowcase = (props:{rout:string,title:string}): React.ReactElement => {
+export const TopNavigationAccessoriesShowcase = (props:{title:string}): React.ReactElement => {
 
   const [menuVisible, setMenuVisible] = React.useState(false);
 
@@ -44,10 +31,6 @@ export const TopNavigationAccessoriesShowcase = (props:{rout:string,title:string
   
   );
 
-  const renderBackAction = () => (
-    <FontAwesome6 onPress={() => handleBackPress(props.rout)} name="arrow-left" style={styles.iconStyle} iconStyle="solid" />
-  );
-
   return (
     <Layout
       style={styles.container}
@@ -57,7 +40,6 @@ export const TopNavigationAccessoriesShowcase = (props:{rout:string,title:string
         alignment='center'
         title={props.title}
         style={styles.nav}
-        accessoryLeft={renderBackAction}
         // accessoryRight={renderRightActions}
       />
     </Layout>
