@@ -12,6 +12,7 @@ import { primaryColor } from './Color';
 import { TopNavigationAccessoriesShowcase } from './TopNavigationAccessoriesShowcase';
 import { getDBConnection, getAllSubjects, updateSubject } from '../DataBase/db'; // adjust path if needed
 import { useIsFocused } from '@react-navigation/native';
+import Loader from './Loader'; // added loader
 
 type Subject = {
   id: number;
@@ -25,19 +26,26 @@ type Subject = {
 export const SetActiveSubject = (): React.ReactElement => {
   const [selectedIndex, setSelectedIndex] = useState<IndexPath[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [loading, setLoading] = useState(false);
   const isFocused = useIsFocused();
+
   useEffect(() => {
     const fetchData = async () => {
-      const db = await getDBConnection();
-      const result = await getAllSubjects(db);
-      setSubjects(result);
+      setLoading(true);
+      try {
+        const db = await getDBConnection();
+        const result = await getAllSubjects(db);
+        setSubjects(result);
 
-      // 🔸 Preselect active subjects
-      const activeIndexes: IndexPath[] = result
-        .map((s, i) => (s.active_subject === 1 ? new IndexPath(i) : null))
-        .filter((i): i is IndexPath => i !== null);
+        // 🔸 Preselect active subjects
+        const activeIndexes: IndexPath[] = result
+          .map((s, i) => (s.active_subject === 1 ? new IndexPath(i) : null))
+          .filter((i): i is IndexPath => i !== null);
 
-      setSelectedIndex(activeIndexes);
+        setSelectedIndex(activeIndexes);
+      } finally {
+        setLoading(false);
+      }
     };
 
     if (isFocused) {
@@ -48,21 +56,26 @@ export const SetActiveSubject = (): React.ReactElement => {
   const options = subjects.map(s => s.name);
 
   const handleActivate = async () => {
-    const db = await getDBConnection();
-    const selectedNames = selectedIndex.map(idx => options[idx.row]);
+    setLoading(true);
+    try {
+      const db = await getDBConnection();
+      const selectedNames = selectedIndex.map(idx => options[idx.row]);
 
-    await Promise.all(
-      subjects.map(async subject => {
-        const updatedSubject = {
-          ...subject,
-          active_subject: selectedNames.includes(subject.name) ? 1 : 0,
-        };
-        await updateSubject(db, subject.id, updatedSubject);
-      }),
-    );
+      await Promise.all(
+        subjects.map(async subject => {
+          const updatedSubject = {
+            ...subject,
+            active_subject: selectedNames.includes(subject.name) ? 1 : 0,
+          };
+          await updateSubject(db, subject.id, updatedSubject);
+        }),
+      );
 
-    const result = await getAllSubjects(db);
-    setSubjects(result);
+      const result = await getAllSubjects(db);
+      setSubjects(result);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const GreenCheckIcon = ({ state, icon }: { state: boolean; icon: any }) => (
@@ -77,6 +90,7 @@ export const SetActiveSubject = (): React.ReactElement => {
 
   return (
     <Layout style={styles.container} level="1">
+      <Loader visible={loading} animationSpeedMultiplier={1.0} />
       <View>
         <TopNavigationAccessoriesShowcase rout="" title='Set Active Subject'/>
       </View>
@@ -104,6 +118,7 @@ export const SetActiveSubject = (): React.ReactElement => {
           style={styles.containerButton}
           status="success"
           onPress={handleActivate}
+          disabled={loading}
         >
           Activate
         </Button>

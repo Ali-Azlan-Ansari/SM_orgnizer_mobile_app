@@ -19,65 +19,60 @@ import EditSubject from './components/EditSubject';
 import ImageGalleryScreen from './components/ImageGalleryScreen';
 import MyGallery from './components/ImageGalleryScreen';
 import { getDBConnection, setupDatabaseTables } from './DataBase/db';
+import HelpGuide from './components/Help';
 
 
 const Stack = createStackNavigator();
 const TabNav=()=>(
  <Tab.Navigator
-  screenOptions={({ route }) => ({
-    headerShown: false,
+ screenOptions={({ route }) => ({
+  headerShown: false,
 
-    // ✅ Tab bar styling
-    tabBarStyle: {
-      backgroundColor: backgroundColor, // your defined dark background
-      borderTopWidth: 0,                // no top border
-      elevation: 0,                     // remove shadow on Android
-      shadowOpacity: 0,                 // remove shadow on iOS
-      height: 70,
-      paddingTop: 10,
-      paddingBottom: 10,
-    },
+  tabBarStyle: {
+    backgroundColor: backgroundColor, // kept as-is
+    borderTopWidth: 0,
+    elevation: 0,
+    shadowOpacity: 0,
+    height: 70,
+    paddingTop: 8,
+    paddingBottom: 8,
+    paddingHorizontal: 8,
+  },
 
-    // ✅ Label styling
-    tabBarLabelStyle: {
-      marginTop: -4,
-      fontSize: 12,
-    },
+  tabBarLabelStyle: {
+    fontSize: 12,
+    marginTop: 0, // remove negative offset
+    paddingTop: 2,
+  },
 
-    // ✅ Active/inactive color
-    tabBarActiveTintColor: primaryColor,
-    tabBarInactiveTintColor: '#ffffff',
+  tabBarActiveTintColor: primaryColor,
+  tabBarInactiveTintColor: '#ffffff',
 
-    // ✅ Icon rendering
-    tabBarIcon: ({ focused, color, size }) => {
-      const iconStyle = {
-        fontSize: size,
-        color: color,
-        marginBottom: 4,
-      };
+  tabBarIcon: ({ focused, color, size }) => {
+    // use the size prop directly for consistency
+    switch (route.name) {
+      case 'Active':
+        return <FontAwesome6 name="book-open" size={size} color={color} iconStyle="solid" />;
+      case 'Set Active':
+        return <FontAwesome6 name="list-check" size={size} color={color} iconStyle="solid" />;
+      case 'Scanner':
+        return <FontAwesome6 name="camera-retro" size={size} color={color} iconStyle="solid" />;
+      case 'Subject':
+        return <FontAwesome6 name="book" size={size} color={color} iconStyle="solid" />;
+      case 'Help':
+        return <FontAwesome6 name="circle-info" size={size} color={color} iconStyle="solid" />;
+      default:
+        return null;
+    }
+  },
+})}
 
-      switch (route.name) {
-        case 'Active':
-          return <FontAwesome6 name="book-open" style={iconStyle} iconStyle="solid" />;
-        case 'Set Active':
-          return <FontAwesome6 name="list-check" style={iconStyle} iconStyle="solid" />;
-        case 'Scanner':
-          return <FontAwesome6 name="camera-retro" style={iconStyle} iconStyle="solid" />;
-        case 'Subject':
-          return <FontAwesome6 name="book" style={iconStyle} iconStyle="solid" />;
-        case 'Crater':
-          return <FontAwesome6 name="laptop-code" style={iconStyle} iconStyle="solid" />;
-        default:
-          return null;
-      }
-    },
-  })}
 >
   <Tab.Screen name="Active" component={ActiveSubject} />
   <Tab.Screen name="Set Active" component={SetActiveSubject} />
   <Tab.Screen name="Scanner" component={Scanner} />
   <Tab.Screen name="Subject" component={SubjectManager} />
-  <Tab.Screen name="Crater" component={Crater} />
+  <Tab.Screen name="Help" component={HelpGuide} />
 </Tab.Navigator>
 
 )
@@ -93,11 +88,7 @@ const StackNav=()=>(
 
 
 
-const HomeScreen = () => (
-  <Layout style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-    <Text category='h1'>Under Development</Text>
-  </Layout>
-);
+
 const Crater = () => (
   <Layout style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
     <Text category='h1'>Under Development</Text>
@@ -108,32 +99,7 @@ const styles = StyleSheet.create({
     height:100,
   },
 });
-const ActiveSubject1 = () => {
-   const [selectedIndex, setSelectedIndex] = React.useState<IndexPath[]>([
-    new IndexPath(0),
-    new IndexPath(1),
-  ]);
-  
-    
- 
 
-  return (
-    <Layout
-      style={styles.container}
-      level='1'
-    >
-      <Select
-        multiSelect={true}
-        selectedIndex={selectedIndex}
-        onSelect={(index) => setSelectedIndex(index as IndexPath[])}
-      >
-        <SelectItem title='Option 1' />
-        <SelectItem title='Option 2' />
-        <SelectItem title='Option 3' />
-      </Select>
-    </Layout>
-  );
-};
 
 
 const Tab = createBottomTabNavigator();
@@ -162,13 +128,4 @@ export default () =>{
   </ApplicationProvider>
   </>
 
-
-   /* <IconRegistry icons={EvaIconsPack} />
-    <ApplicationProvider {...eva} theme={eva.light}>
-      <ActiveSubject/>
-      <Scanner /> 
-      <BNB/>
-    </ApplicationProvider> */
- 
-  
 )};

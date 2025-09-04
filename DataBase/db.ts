@@ -146,7 +146,6 @@ export const addImages = async (
   subjectId: number,
   imageUris: string[]
 ): Promise<void> => {
-  debugger
   const query = `
     INSERT INTO image (subject_id, image_uri)
     VALUES (?, ?);

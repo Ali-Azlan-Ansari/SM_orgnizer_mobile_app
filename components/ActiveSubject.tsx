@@ -12,24 +12,33 @@ import { baseBGColor, primaryColor } from './Color';
 import { TopNavigationAccessoriesShowcase } from './TopNavigationAccessoriesShowcase';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { getActiveSubjects, getDBConnection, Subject } from '../DataBase/db';
+import Loader from './Loader';
 
 const ActiveSubject = () => {
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
-
+  
   useEffect(() => {
     const fetchActiveSubjects = async () => {
-      const db = await getDBConnection();
-      const result = await getActiveSubjects(db);
-      setSubjects(result);
+      setLoading(true);
+      try {
+        const db = await getDBConnection();
+        const result = await getActiveSubjects(db);
+        setSubjects(result);
+      } catch (e: any) {
+        console.warn('Fetch error:', e);
+      } finally {
+        setLoading(false);
+      }
     };
     if (isFocused) {
       fetchActiveSubjects();
     }
   }, [isFocused]);
 
-  const cardPairs = [];
+  const cardPairs: Subject[][] = [];
   const data = subjects;
 
   for (let i = 0; i < data.length; i += 2) {
@@ -38,14 +47,20 @@ const ActiveSubject = () => {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <TopNavigationAccessoriesShowcase rout="" title='Active Subject'/>
+      <TopNavigationAccessoriesShowcase rout="" title="Active Subject" />
       <ScrollView contentContainerStyle={styles.container}>
+        
+     
         {cardPairs.map((pair, rowIndex) => (
           <View key={rowIndex} style={styles.row}>
             {pair.map((item, colIndex) => (
               <TouchableWithoutFeedback
                 key={colIndex}
-                onPress={() => navigation.navigate('ImageGalleryScreen', { subjectId: item.id })}
+                onPress={() =>
+                  navigation.navigate('ImageGalleryScreen', {
+                    subjectId: item.id,
+                  })
+                }
               >
                 <View style={styles.card}>
                   <View style={styles.label}>
@@ -56,8 +71,12 @@ const ActiveSubject = () => {
                   <Text style={styles.subtitle}>
                     Teacher: {item.teacher_name}
                   </Text>
-                  <Text style={styles.subtitle}>Abbr: {item.abbreviation}</Text>
-                  <Text style={styles.subtitle}>Semester: {item.semester}</Text>
+                  <Text style={styles.subtitle}>
+                    Abbr: {item.abbreviation}
+                  </Text>
+                  <Text style={styles.subtitle}>
+                    Semester: {item.semester}
+                  </Text>
                   <Text style={styles.subtitle}>
                     Date:
                     {item.date
@@ -79,6 +98,9 @@ const ActiveSubject = () => {
           </View>
         ))}
       </ScrollView>
+
+      {/* Loader sirf data fetch ke dauran center mein */}
+      <Loader visible={loading}  animationSpeedMultiplier={1.0} />
     </SafeAreaView>
   );
 };
@@ -93,6 +115,7 @@ const styles = StyleSheet.create({
   },
   container: {
     padding: 16,
+    paddingBottom: 40,
   },
   row: {
     flexDirection: 'row',
@@ -104,7 +127,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 12,
-    alignItems: 'flex-start', // Left align text like a book
+    alignItems: 'flex-start',
     justifyContent: 'flex-start',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -145,6 +168,20 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 10,
     fontWeight: 'bold',
+  },
+
+  errorBox: {
+    backgroundColor: '#ffe5e5',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#ff4d4d',
+  },
+  errorText: {
+    color: '#900',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

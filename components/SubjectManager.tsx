@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import {
   Layout,
   Input,
   Button,
   List,
   ListItem,
-  Icon,
-  IconElement,
   Text,
+  Modal,
+  Card,
 } from '@ui-kitten/components';
 import FontAwesome6 from '@react-native-vector-icons/fontawesome6';
 import { TopNavigationAccessoriesShowcase } from './TopNavigationAccessoriesShowcase';
@@ -20,11 +20,8 @@ import {
   Subject,
 } from '../DataBase/db';
 import { ModalKitten, ModalKittenHandle } from './Modal';
-
-// COLORS
-const primaryColor = '#7ebe4b';
-const backgroundColor = '#353f5dd5';
-const baseBGColor = '#212b46';
+import { backgroundColor, baseBGColor } from './Color';
+import Loader from './Loader'; // ✅ Import Loader
 
 // ICONS
 const PlusIcon = () => (
@@ -47,65 +44,72 @@ const SearchIcon = () => (
   />
 );
 
-// COMPONENT
 const SubjectManager = () => {
   const [value, setValue] = useState('');
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [confirmVisible, setConfirmVisible] = useState(false);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false); // ✅ Loader state
+
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
   const modalRef = useRef<ModalKittenHandle>(null);
-  const handlePress = (massge: string, time: number, status: string) => {
-    modalRef.current?.show(massge, time, status);
-  };
-  const fetchData = async () => {
-    const db = await getDBConnection();
-    const result = await getAllSubjects(db);
-    setSubjects(result);
-  };
-  const deleteSubject = async (id: number) => {
-    try {
-      const db = await getDBConnection(); // 1. Connect DB
-      await deleteSubjectById(db, id); // 2. Delete
-      await fetchData(); // 3. Refresh list
 
-      // 4. Success Message (if using ModalKitten)
-      modalRef.current?.show('Subject deleted successfully!', 2000, 'success');
-      console.log('Subject deleted successfully');
-    } catch (error) {
-      console.error('Error deleting subject:', error);
-      modalRef.current?.show('Failed to delete subject', 3000, 'error');
-    }
-  };
-  useEffect(() => {
-    const fetchData = async () => {
+  const fetchData = async () => {
+    try {
+      setLoading(true); // ✅ Show loader
       const db = await getDBConnection();
       const result = await getAllSubjects(db);
       setSubjects(result);
-    };
+    } finally {
+      setLoading(false); // ✅ Hide loader
+    }
+  };
+
+  const handleDeletePress = (id: number) => {
+    setSelectedId(id);
+    setConfirmVisible(true);
+  };
+
+  const deleteSubject = async () => {
+    if (!selectedId) return;
+    try {
+      setLoading(true); // ✅ Show loader while deleting
+      const db = await getDBConnection();
+      await deleteSubjectById(db, selectedId);
+      await fetchData();
+      modalRef.current?.show('Subject deleted successfully!', 2000, 'success');
+    } catch (error) {
+      console.error('Error deleting subject:', error);
+      modalRef.current?.show('Failed to delete subject', 3000, 'error');
+    } finally {
+      setConfirmVisible(false);
+      setSelectedId(null);
+      setLoading(false); // ✅ Hide loader
+    }
+  };
+
+  useEffect(() => {
     if (isFocused) {
       fetchData();
     }
   }, [isFocused]);
 
-  const renderItem = ({ item, index }: any) => (
+  const renderItem = ({ item }: any) => (
     <ListItem
       title={`${item.name}`}
       description={`${item.abbreviation} | ${item.date?.slice(0, 10)}`}
       accessoryRight={() => (
         <View style={styles.iconButtonContainer}>
           <Button
-            onPress={() => {
-              navigation.navigate('EditSubject', { id: item.id });
-            }}
+            onPress={() => navigation.navigate('EditSubject', { id: item.id })}
             style={styles.iconButton}
             size="tiny"
-            status="primery"
+            status="primary"
             accessoryLeft={EditIcon}
           />
           <Button
-            onPress={() => {
-              deleteSubject(item.id);
-            }}
+            onPress={() => handleDeletePress(item.id)}
             style={styles.iconButton}
             size="tiny"
             status="danger"
@@ -119,11 +123,10 @@ const SubjectManager = () => {
   return (
     <>
       <View>
-        <TopNavigationAccessoriesShowcase rout="" title='Subject Management' />
+        <TopNavigationAccessoriesShowcase rout="" title="Subject Management" />
       </View>
       <Layout style={styles.mainContainer} level="1">
-        {/* Toolbar with Search and Add */}
-
+        {/* Toolbar */}
         <View style={styles.topBar}>
           <Input
             style={styles.searchInput}
@@ -142,21 +145,56 @@ const SubjectManager = () => {
         </View>
 
         {/* Subject List */}
-
         <List
           style={styles.list}
           data={subjects.filter(
             subject =>
               subject.name.toLowerCase().includes(value.toLowerCase()) ||
-              subject.abbreviation
-                ?.toLowerCase()
-                .includes(value.toLowerCase()) ||
+              subject.abbreviation?.toLowerCase().includes(value.toLowerCase()) ||
               subject.teacher_name?.toLowerCase().includes(value.toLowerCase()),
           )}
           renderItem={renderItem}
         />
       </Layout>
+
+      {/* Loader */}
+      <Loader visible={loading} animationSpeedMultiplier={1.0} />
+
+      {/* Success/Error Toast */}
       <ModalKitten ref={modalRef} />
+
+      {/* Confirmation Modal */}
+      <Modal
+        visible={confirmVisible}
+        backdropStyle={styles.backdrop}
+        onBackdropPress={() => setConfirmVisible(false)}
+      >
+        <Card disabled={true} style={styles.confirmCard}>
+          <Text category="h6" style={styles.confirmTitle}>
+            Confirm Deletion
+          </Text>
+          <Text appearance="hint" style={styles.confirmMessage}>
+            Are you sure you want to delete this subject? This action cannot be undone.
+          </Text>
+          <View style={styles.confirmButtons}>
+            <Button
+              style={[styles.confirmButton, { backgroundColor: '#ff3d71' }]}
+              onPress={deleteSubject}
+              status="danger"
+            >
+              Yes, Delete
+            </Button>
+            <Button
+              style={styles.confirmButton}
+              onPress={() => setConfirmVisible(false)}
+              appearance="outline"
+              status="basic"
+            >
+              Cancel
+            </Button>
+          </View>
+        </Card>
+      </Modal>
     </>
   );
 };
@@ -180,7 +218,6 @@ const styles = StyleSheet.create({
     marginRight: 8,
     backgroundColor: baseBGColor,
     borderRadius: 8,
-    color: '#000000',
   },
   addButton: {
     borderRadius: 50,
@@ -207,5 +244,32 @@ const styles = StyleSheet.create({
     height: 36,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  backdrop: {
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  confirmCard: {
+    width: 300,
+    borderRadius: 12,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+  },
+  confirmTitle: {
+    marginBottom: 8,
+    fontWeight: 'bold',
+    color: '#ffffffff',
+  },
+  confirmMessage: {
+    marginBottom: 20,
+    color: '#ffffffff',
+  },
+  confirmButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+  },
+  confirmButton: {
+    borderRadius: 8,
+    minWidth: 100,
   },
 });

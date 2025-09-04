@@ -9,11 +9,12 @@ import {
 } from 'react-native';
 import DocumentScanner, { ScanDocumentResponse } from 'react-native-document-scanner-plugin';
 import { Button, Layout } from '@ui-kitten/components';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { baseBGColor } from './Color';
 import { TopNavigationAccessoriesShowcase } from './TopNavigationAccessoriesShowcase';
 import { addImages, getActiveSubjects, getDBConnection, Subject } from '../DataBase/db';
 import { ModalKitten, ModalKittenHandle } from './Modal';
+import Loader from './Loader';
 
 const { width } = Dimensions.get('window');
 
@@ -59,12 +60,14 @@ const styles = StyleSheet.create({
 });
 
 export const Scanner = () => {
+  const [loading, setLoading] = useState(false); // loader state
   const [scannedImages, setScannedImages] = useState<string[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   let res: ScanDocumentResponse;
   const isFocused = useIsFocused();
   const modalRef = useRef<ModalKittenHandle>(null);
+  const navigation = useNavigation<any>();
   const handlePress = (massge: string, time: number, status: string) => {
       modalRef.current?.show(massge, time, status);
   };
@@ -86,21 +89,39 @@ export const Scanner = () => {
   };
 
   const addImagesInSubject =async(subId: number, scannedImages?: string[])=>{
-    debugger
-    if (scannedImages?.length != undefined && scannedImages?.length > 0) {
-    const db = await getDBConnection();
-    await addImages(db, subId, scannedImages);
-    handlePress("Image add in subject",1000,'success')
-    }else{
-       handlePress("some thing want wrong",1000,'error')
+    setLoading(true);
+    try {
+      if (scannedImages?.length != undefined && scannedImages?.length > 0) {
+        const db = await getDBConnection();
+        await addImages(db, subId, scannedImages);
+        handlePress('Image add in subject', 1000, 'success');
+         navigation.navigate('ImageGalleryScreen', {
+                    subjectId: subId,
+         })
+      } else {
+        handlePress('some thing want wrong', 1000, 'error');
+      }
+    } catch (err) {
+      console.error('Add images error:', err);
+      handlePress('some thing want wrong', 1000, 'error');
+    } finally {
+      setLoading(false);
     }
   }
 
   useEffect(() => {
     const fetchActiveSubjects = async () => {
-      const db = await getDBConnection();
-      const result = await getActiveSubjects(db);
-      setSubjects(result);
+      setLoading(true);
+      try {
+        const db = await getDBConnection();
+        const result = await getActiveSubjects(db);
+        setSubjects(result);
+      } catch (err) {
+        console.error('Fetching subjects failed:', err);
+        handlePress('Failed to load subjects', 1500, 'error');
+      } finally {
+        setLoading(false);
+      }
     };
 
     if (isFocused) {
@@ -170,6 +191,8 @@ export const Scanner = () => {
         </ScrollView>
       </Layout>
        <ModalKitten ref={modalRef} />
+
+      <Loader visible={loading} animationSpeedMultiplier={1.0} />
     </Layout>
   );
 };

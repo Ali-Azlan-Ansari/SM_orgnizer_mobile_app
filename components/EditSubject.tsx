@@ -2,13 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { StyleSheet, View, ScrollView, Alert } from 'react-native';
 import { Input, Text, Button } from '@ui-kitten/components';
 import { TopNavigationAccessoriesShowcase } from './TopNavigationAccessoriesShowcase';
-import { primaryColor, baseBGColor } from './Color';
+import { baseBGColor } from './Color';
 import { getDBConnection, getSubjectById, updateSubject } from '../DataBase/db';
 import { ModalKitten, ModalKittenHandle } from './Modal';
 import { useNavigation } from '@react-navigation/native';
+import Loader from './Loader'; // <-- import your loader
 
 const EditSubject = ({ route }: any): React.ReactElement => {
-  const { id } = route.params; // <-- get id from route
+  const { id } = route.params; // get id from route
   const [subjectName, setSubjectName] = useState('');
   const [teacherName, setTeacherName] = useState('');
   const [abbreviation, setAbbreviation] = useState('');
@@ -18,6 +19,9 @@ const EditSubject = ({ route }: any): React.ReactElement => {
   const [teacherError, setTeacherError] = useState('');
   const [abbreviationError, setAbbreviationError] = useState('');
   const [semesterError, setSemesterError] = useState('');
+
+  const [loading, setLoading] = useState(false); // loader state
+
   const modalRef = useRef<ModalKittenHandle>(null);
   const navigation = useNavigation<any>();
 
@@ -27,6 +31,8 @@ const EditSubject = ({ route }: any): React.ReactElement => {
 
   const fetchSubject = async () => {
     try {
+      setLoading(true);
+
       const db = await getDBConnection();
       const subject = await getSubjectById(db, id);
       if (subject) {
@@ -40,6 +46,8 @@ const EditSubject = ({ route }: any): React.ReactElement => {
       }
     } catch (err) {
       console.error('Fetch error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,7 +73,9 @@ const EditSubject = ({ route }: any): React.ReactElement => {
     }
 
     if (!/^[A-Z]{3}$/.test(abbreviation.trim())) {
-      setAbbreviationError('Abbreviation must be 3 uppercase letters (A–Z only)');
+      setAbbreviationError(
+        'Abbreviation must be 3 uppercase letters (A–Z only)'
+      );
       valid = false;
     } else {
       setAbbreviationError('');
@@ -86,6 +96,7 @@ const EditSubject = ({ route }: any): React.ReactElement => {
     if (!validate()) return;
 
     try {
+      setLoading(true);
       const db = await getDBConnection();
       await updateSubject(db, id, {
         name: subjectName.trim(),
@@ -102,8 +113,10 @@ const EditSubject = ({ route }: any): React.ReactElement => {
         navigation.navigate('MainTabs', { screen: 'Subject' });
       }, 2200);
     } catch (error) {
-      console.error("Error updating subject:", error);
+      console.error('Error updating subject:', error);
       handlePress('Update Failed', 2000, 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -116,7 +129,7 @@ const EditSubject = ({ route }: any): React.ReactElement => {
 
   return (
     <View style={styles.container}>
-      <TopNavigationAccessoriesShowcase rout="Subject" title='Edit Subject' />
+      <TopNavigationAccessoriesShowcase rout="Subject" title="Edit Subject" />
       <ScrollView style={styles.scroll}>
         <Input
           label="Subject Name"
@@ -146,7 +159,7 @@ const EditSubject = ({ route }: any): React.ReactElement => {
           label="Abbreviation (3 Uppercase Letters)"
           placeholder="e.g. MAT"
           value={abbreviation}
-          onChangeText={text => setAbbreviation(text.toUpperCase())}
+          onChangeText={(text) => setAbbreviation(text.toUpperCase())}
           maxLength={3}
           status="success"
           style={styles.input}
@@ -171,7 +184,11 @@ const EditSubject = ({ route }: any): React.ReactElement => {
           Update
         </Button>
       </ScrollView>
+
       <ModalKitten ref={modalRef} />
+
+      {/* Loader Overlay */}
+      <Loader visible={loading} animationSpeedMultiplier={1.0} />
     </View>
   );
 };
