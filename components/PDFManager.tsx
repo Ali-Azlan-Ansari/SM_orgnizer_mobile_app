@@ -23,6 +23,7 @@ import RNFS from 'react-native-fs';
 import { ModalKitten, ModalKittenHandle } from './Modal';
 import { backgroundColor, baseBGColor } from './Color';
 import Loader from './Loader';
+import FileViewer from 'react-native-file-viewer';
 
 // ✅ ICONS
 const RenameIcon = () => (
@@ -210,7 +211,16 @@ const PdfManager = () => {
 
   const renderItem = ({ item }: { item: PdfFile }) => (
     <ListItem
-      title={`${item.name}`}
+      onPress={() => {
+        FileViewer.open(item.path);
+      }}
+      title={() => (
+        <View style={{ flex: 1, justifyContent: 'center', marginRight: 10 }}>
+          <Text numberOfLines={1} ellipsizeMode="tail" style={{ fontSize: 16 }}>
+            {item.name}
+          </Text>
+        </View>
+      )}
       accessoryRight={() => (
         <View style={styles.iconButtonContainer}>
           <Button

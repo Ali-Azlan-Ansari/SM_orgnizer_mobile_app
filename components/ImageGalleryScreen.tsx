@@ -250,7 +250,7 @@ const MyGallery = () => {
 
   const generateUniquePdfName = () => {
     const timestamp = new Date().getTime(); // milliseconds since 1970
-    return `document_${timestamp}.pdf`;
+    return `document_${timestamp}`;
   };
 
   // NOTE: keep this function for compatibility if used elsewhere (not used by the new "name" flow)
