@@ -37,10 +37,79 @@ export const createImageTable = async (db: SQLiteDatabase): Promise<void> => {
   await db.executeSql(query);
 };
 
+/** Create the table (min_mark, max_mark instead of mark_range) */
+export const createGradingScaleTable = async (db: SQLiteDatabase): Promise<void> => {
+  const query = `
+    CREATE TABLE IF NOT EXISTS GradingScale (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      min_mark INTEGER NOT NULL,
+      max_mark INTEGER NOT NULL,
+      letter_grade TEXT NOT NULL,
+      grade_points REAL NOT NULL
+    );
+  `;
+  await db.executeSql(query);
+
+  // Insert defaults only if table is empty
+  const [results] = await db.executeSql('SELECT COUNT(*) as count FROM GradingScale');
+  const count = results.rows.item(0).count;
+
+  if (count === 0) {
+    const defaultValues = [
+      [80, 100, 'A', 4.0],
+      [75, 79, 'B+', 3.5],
+      [70, 74, 'B', 3.0],
+      [65, 69, 'C+', 2.5],
+      [55, 64, 'C', 2.0],
+      [50, 54, 'D', 1.5],
+      [0, 49, 'F', 0.0],
+    ];
+
+    for (const [min, max, grade, points] of defaultValues) {
+      await db.executeSql(
+        `INSERT INTO GradingScale (min_mark, max_mark, letter_grade, grade_points)
+         VALUES (?, ?, ?, ?)`,
+        [min, max, grade, points]
+      );
+    }
+  }
+};
+
+/** Get all grading scales */
+export const getAllGradingScales = async (db: SQLiteDatabase) => {
+  const [results] = await db.executeSql(`SELECT * FROM GradingScale ORDER BY max_mark DESC`);
+  const rows: any[] = [];
+  for (let i = 0; i < results.rows.length; i++) {
+    rows.push(results.rows.item(i));
+  }
+  return rows; // [{id,min_mark,max_mark,letter_grade,grade_points}, ...]
+};
+
+/** Delete all grading scales */
+export const deleteAllGradingScales = async (db: SQLiteDatabase) => {
+  await db.executeSql(`DELETE FROM GradingScale`);
+};
+
+/** Insert multiple grading scales (bulk insert) */
+export const insertGradingScales = async (
+  db: SQLiteDatabase,
+  gradingScales: { min_mark: number; max_mark: number; letter_grade: string; grade_points: number }[]
+) => {
+  for (const gs of gradingScales) {
+    await db.executeSql(
+      `INSERT INTO GradingScale (min_mark, max_mark, letter_grade, grade_points)
+       VALUES (?, ?, ?, ?)`,
+      [gs.min_mark, gs.max_mark, gs.letter_grade, gs.grade_points]
+    );
+  }
+};
+
+
 export const setupDatabaseTables = async (): Promise<void> => {
   const db = await getDBConnection();
   await createSubjectTable(db);
   await createImageTable(db);
+  await createGradingScaleTable(db);
 };
 
 export const addSubject = async (

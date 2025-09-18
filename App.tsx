@@ -23,6 +23,8 @@ import Splash from './components/SplashScreen';
 import LottieView from 'lottie-react-native';
 import Tools from './components/Tools';
 import PDFManager from './components/PDFManager'
+import GradingScale from './components/GradingScale';
+
 
 
 
@@ -87,7 +89,7 @@ const StackNav=()=>(
   <Stack.Screen name="EditSubject" component={EditSubject} />
   <Stack.Screen name="ImageGalleryScreen" component={MyGallery} />
   <Stack.Screen name="PDFManager" component={PDFManager} />
-  
+   <Stack.Screen name="GradingScale" component={GradingScale} />
 </Stack.Navigator>
 )
 

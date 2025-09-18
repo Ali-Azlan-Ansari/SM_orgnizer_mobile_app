@@ -42,7 +42,8 @@ const Tools = () => {
   const cardPairs: {name:string}[][] = [];
   const data = [{name:"PDF",icon:"file-pdf",nav:()=>{navigation.navigate("PDFManager")}},
        {name:"GPA Progress",icon:"graduation-cap",nav:()=>{}},
-{name:"Class Notifications",icon:"clock",nav:()=>{}}];
+       {name:"Class Notifications",icon:"clock",nav:()=>{}},
+       {name:"Grading Scale",icon:"chart-simple",nav:()=>{navigation.navigate("GradingScale")}}];
 
   for (let i = 0; i < data.length; i += 2) {
     cardPairs.push(data.slice(i, i + 2));
