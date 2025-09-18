@@ -16,32 +16,13 @@ import Loader from './Loader';
 import FontAwesome6 from '@react-native-vector-icons/fontawesome6';
 
 const Tools = () => {
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  
   const [loading, setLoading] = useState<boolean>(false);
   const navigation = useNavigation<any>();
-  const isFocused = useIsFocused();
-  
-  useEffect(() => {
-    const fetchActiveSubjects = async () => {
-      setLoading(true);
-      try {
-        const db = await getDBConnection();
-        const result = await getActiveSubjects(db);
-        setSubjects(result);
-      } catch (e: any) {
-        console.warn('Fetch error:', e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (isFocused) {
-      fetchActiveSubjects();
-    }
-  }, [isFocused]);
-
+ 
   const cardPairs: {name:string}[][] = [];
   const data = [{name:"PDF",icon:"file-pdf",nav:()=>{navigation.navigate("PDFManager")}},
-       {name:"GPA Progress",icon:"graduation-cap",nav:()=>{}},
+       {name:"GPA Progress",icon:"graduation-cap",nav:()=>{navigation.navigate("GpaProgress")}},
        {name:"Class Notifications",icon:"clock",nav:()=>{}},
        {name:"Grading Scale",icon:"chart-simple",nav:()=>{navigation.navigate("GradingScale")}}];
 
@@ -51,7 +32,7 @@ const Tools = () => {
 
   return (
     <SafeAreaView style={styles.screen}>
-      <TopNavigationAccessoriesShowcase title="Active Subject" />
+      <TopNavigationAccessoriesShowcase title="Tools" />
       <ScrollView contentContainerStyle={styles.container}>
         
      

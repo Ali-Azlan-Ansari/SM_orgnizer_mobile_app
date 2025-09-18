@@ -24,6 +24,9 @@ import LottieView from 'lottie-react-native';
 import Tools from './components/Tools';
 import PDFManager from './components/PDFManager'
 import GradingScale from './components/GradingScale';
+import GpaProgress from './components/GpaProgress';
+import AddMarks from './components/AddMarks';
+import EditMarks from './components/EditMarks';
 
 
 
@@ -90,6 +93,9 @@ const StackNav=()=>(
   <Stack.Screen name="ImageGalleryScreen" component={MyGallery} />
   <Stack.Screen name="PDFManager" component={PDFManager} />
    <Stack.Screen name="GradingScale" component={GradingScale} />
+    <Stack.Screen name="GpaProgress" component={GpaProgress} />
+     <Stack.Screen name="AddMarks" component={AddMarks} />
+      <Stack.Screen name="EditMarks" component={EditMarks} />
 </Stack.Navigator>
 )
 
