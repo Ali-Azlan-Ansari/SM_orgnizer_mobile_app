@@ -23,7 +23,7 @@ const Tools = () => {
   const cardPairs: {name:string}[][] = [];
   const data = [{name:"PDF",icon:"file-pdf",nav:()=>{navigation.navigate("PDFManager")}},
        {name:"GPA Progress",icon:"graduation-cap",nav:()=>{navigation.navigate("GpaProgress")}},
-       {name:"Class Notifications",icon:"clock",nav:()=>{}},
+       {name:"Schedule",icon:"clock",nav:()=>{navigation.navigate("Schedule")}},
        {name:"Grading Scale",icon:"chart-simple",nav:()=>{navigation.navigate("GradingScale")}}];
 
   for (let i = 0; i < data.length; i += 2) {

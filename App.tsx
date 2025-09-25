@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import * as eva from '@eva-design/eva';
-import { ApplicationProvider, IconRegistry, Layout,Text } from '@ui-kitten/components';
+import {
+  ApplicationProvider,
+  IconRegistry,
+  Layout,
+  Text,
+} from '@ui-kitten/components';
 import { StyleSheet, View } from 'react-native';
 import { IndexPath, Select, SelectItem } from '@ui-kitten/components';
 import { Scanner } from './components/Scanner';
@@ -22,94 +27,127 @@ import HelpGuide from './components/Help';
 import Splash from './components/SplashScreen';
 import LottieView from 'lottie-react-native';
 import Tools from './components/Tools';
-import PDFManager from './components/PDFManager'
+import PDFManager from './components/PDFManager';
 import GradingScale from './components/GradingScale';
 import GpaProgress from './components/GpaProgress';
 import AddMarks from './components/AddMarks';
 import EditMarks from './components/EditMarks';
-
-
-
+import Schedule from './components/Schedule';
+import AddClassTime from './components/AddClassTime';
+import EditClassTime from './components/EditClassTime';
 
 const Stack = createStackNavigator();
-const TabNav=()=>(
- <Tab.Navigator
- screenOptions={({ route }) => ({
-  headerShown: false,
+const TabNav = () => (
+  <Tab.Navigator
+    screenOptions={({ route }) => ({
+      headerShown: false,
 
-  tabBarStyle: {
-    backgroundColor: backgroundColor, // kept as-is
-    borderTopWidth: 0,
-    elevation: 0,
-    shadowOpacity: 0,
-    height: 70,
-    paddingTop: 8,
-    paddingBottom: 8,
-    paddingHorizontal: 8,
-  },
+      tabBarStyle: {
+        backgroundColor: backgroundColor, // kept as-is
+        borderTopWidth: 0,
+        elevation: 0,
+        shadowOpacity: 0,
+        height: 70,
+        paddingTop: 8,
+        paddingBottom: 8,
+        paddingHorizontal: 8,
+      },
 
-  tabBarLabelStyle: {
-    fontSize: 12,
-    marginTop: 0, // remove negative offset
-    paddingTop: 2,
-  },
+      tabBarLabelStyle: {
+        fontSize: 12,
+        marginTop: 0, // remove negative offset
+        paddingTop: 2,
+      },
 
-  tabBarActiveTintColor: primaryColor,
-  tabBarInactiveTintColor: '#ffffff',
+      tabBarActiveTintColor: primaryColor,
+      tabBarInactiveTintColor: '#ffffff',
 
-  tabBarIcon: ({ focused, color, size }) => {
-    // use the size prop directly for consistency
-    switch (route.name) {
-      case 'Active':
-        return <FontAwesome6 name="book-open" size={size} color={color} iconStyle="solid" />;
-      case 'Tools':
-        return <FontAwesome6 name="wrench" size={size} color={color} iconStyle="solid" />;
-      case 'Scanner':
-        return <FontAwesome6 name="camera-retro" size={size} color={color} iconStyle="solid" />;
-      case 'Subject':
-        return <FontAwesome6 name="book" size={size} color={color} iconStyle="solid" />;
-      case 'Help':
-        return <FontAwesome6 name="circle-info" size={size} color={color} iconStyle="solid" />;
-      default:
-        return null;
-    }
-  },
-})}
-
->
-  <Tab.Screen name="Active" component={ActiveSubject} />
-  <Tab.Screen name="Tools" component={Tools} />
-  <Tab.Screen name="Scanner" component={Scanner} />
-  <Tab.Screen name="Subject" component={SubjectManager} />
-  <Tab.Screen name="Help" component={HelpGuide} />
-</Tab.Navigator>
-
-)
-const StackNav=()=>(
+      tabBarIcon: ({ focused, color, size }) => {
+        // use the size prop directly for consistency
+        switch (route.name) {
+          case 'Active':
+            return (
+              <FontAwesome6
+                name="book-open"
+                size={size}
+                color={color}
+                iconStyle="solid"
+              />
+            );
+          case 'Tools':
+            return (
+              <FontAwesome6
+                name="wrench"
+                size={size}
+                color={color}
+                iconStyle="solid"
+              />
+            );
+          case 'Scanner':
+            return (
+              <FontAwesome6
+                name="camera-retro"
+                size={size}
+                color={color}
+                iconStyle="solid"
+              />
+            );
+          case 'Subject':
+            return (
+              <FontAwesome6
+                name="book"
+                size={size}
+                color={color}
+                iconStyle="solid"
+              />
+            );
+          case 'Help':
+            return (
+              <FontAwesome6
+                name="circle-info"
+                size={size}
+                color={color}
+                iconStyle="solid"
+              />
+            );
+          default:
+            return null;
+        }
+      },
+    })}
+  >
+    <Tab.Screen name="Active" component={ActiveSubject} />
+    <Tab.Screen name="Tools" component={Tools} />
+    <Tab.Screen name="Scanner" component={Scanner} />
+    <Tab.Screen name="Subject" component={SubjectManager} />
+    <Tab.Screen name="Help" component={HelpGuide} />
+  </Tab.Navigator>
+);
+const StackNav = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
-  <Stack.Screen name="MainTabs" component={TabNav} />
-  <Stack.Screen name="AddSubject" component={AddSubject} />
-  <Stack.Screen name="EditSubject" component={EditSubject} />
-  <Stack.Screen name="ImageGalleryScreen" component={MyGallery} />
-  <Stack.Screen name="PDFManager" component={PDFManager} />
-   <Stack.Screen name="GradingScale" component={GradingScale} />
+    <Stack.Screen name="MainTabs" component={TabNav} />
+    <Stack.Screen name="AddSubject" component={AddSubject} />
+    <Stack.Screen name="EditSubject" component={EditSubject} />
+    <Stack.Screen name="ImageGalleryScreen" component={MyGallery} />
+    <Stack.Screen name="PDFManager" component={PDFManager} />
+    <Stack.Screen name="GradingScale" component={GradingScale} />
     <Stack.Screen name="GpaProgress" component={GpaProgress} />
-     <Stack.Screen name="AddMarks" component={AddMarks} />
-      <Stack.Screen name="EditMarks" component={EditMarks} />
-</Stack.Navigator>
-)
-
-
-
+    <Stack.Screen name="AddMarks" component={AddMarks} />
+    <Stack.Screen name="EditMarks" component={EditMarks} />
+    <Stack.Screen name="Schedule" component={Schedule} />
+    <Stack.Screen name="AddClassTime" component={AddClassTime} />
+    <Stack.Screen name="EditClassTime" component={EditClassTime} />
+  </Stack.Navigator>
+);
 
 const Crater = () => (
-  <Layout style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-    <Text category='h1'>Under Development</Text>
+  <Layout style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <Text category="h1">Under Development</Text>
   </Layout>
 );
 const styles = StyleSheet.create({
   container: {
-    height:100,
+    height: 100,
   },
   containerSP: {
     flex: 1,
@@ -121,20 +159,17 @@ const styles = StyleSheet.create({
     width: '100%', // or fixed size like 200
     height: '100%',
   },
-}
-);
-
-
+});
 
 const Tab = createBottomTabNavigator();
- 
-export default () =>{
 
-   const [isloading, setIsLoading] = useState<boolean>(true);
+export default () => {
+  const [isloading, setIsLoading] = useState<boolean>(true);
   useEffect(() => {
     const initDB = async () => {
       try {
         await setupDatabaseTables();
+
         console.log('Tables created successfully');
       } catch (error) {
         console.error('Error setting up database:', error);
@@ -144,18 +179,18 @@ export default () =>{
     initDB();
   }, []);
 
-  return isloading ? (<>
-
-    <Splash setIsLoading={setIsLoading}/>
-
-  </>):(
-  <>
-  <IconRegistry icons={EvaIconsPack} />
-  <ApplicationProvider {...eva} theme={eva.dark}>
-    <NavigationContainer>
-   <StackNav/>  
-    </NavigationContainer>
-  </ApplicationProvider>
-  </>
-
-)};
+  return isloading ? (
+    <>
+      <Splash setIsLoading={setIsLoading} />
+    </>
+  ) : (
+    <>
+      <IconRegistry icons={EvaIconsPack} />
+      <ApplicationProvider {...eva} theme={eva.dark}>
+        <NavigationContainer>
+          <StackNav />
+        </NavigationContainer>
+      </ApplicationProvider>
+    </>
+  );
+};

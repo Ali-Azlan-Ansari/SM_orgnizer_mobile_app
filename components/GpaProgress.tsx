@@ -24,6 +24,7 @@ import { ModalKitten, ModalKittenHandle } from './Modal';
 import { backgroundColor, baseBGColor } from './Color';
 import Loader from './Loader';
 import { PieChart } from 'react-native-gifted-charts';
+import { TopNavigationAccessoriesShowcase } from './TopNavigationAccessoriesShowcase';
 
 const PlusIcon = () => (
   <FontAwesome6 name="plus" style={[styles.icon]} iconStyle="solid" />
@@ -230,6 +231,9 @@ export default function GpaProgress() {
 
   return (
     <>
+    <View>
+                  <TopNavigationAccessoriesShowcase title="GPA Progress" />
+    </View>
       <Layout style={styles.mainContainer}>
         <DonutChart />
         <View style={styles.topBar}>
