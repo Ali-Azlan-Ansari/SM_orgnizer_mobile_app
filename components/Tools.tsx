@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,12 @@ import {
   ScrollView,
   Dimensions,
   TouchableWithoutFeedback,
+  BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native';
 import { baseBGColor, primaryColor } from './Color';
 import { TopNavigationAccessoriesShowcase } from './TopNavigationAccessoriesShowcase';
-import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused, useNavigation } from '@react-navigation/native';
 import { getActiveSubjects, getDBConnection, Subject } from '../DataBase/db';
 import Loader from './Loader';
 import FontAwesome6 from '@react-native-vector-icons/fontawesome6';
@@ -19,8 +20,27 @@ const Tools = () => {
   
   const [loading, setLoading] = useState<boolean>(false);
   const navigation = useNavigation<any>();
+
+
+
+ useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        // 👇 Back press → go to "Home" screen
+        navigation.navigate('Active');  
+        return true; // default back ko cancel kar do
+      };
+
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBackPress
+      );
+
+      return () => subscription.remove();
+    }, [navigation])
+  );
  
-  const cardPairs: {name:string}[][] = [];
+  const cardPairs: any[][] = [];
   const data = [{name:"PDF",icon:"file-pdf",nav:()=>{navigation.navigate("PDFManager")}},
        {name:"GPA Progress",icon:"graduation-cap",nav:()=>{navigation.navigate("GpaProgress")}},
        {name:"Schedule",icon:"clock",nav:()=>{navigation.navigate("Schedule")}},

@@ -22,7 +22,7 @@ import AddSubject from './components/AddSubject';
 import EditSubject from './components/EditSubject';
 import ImageGalleryScreen from './components/ImageGalleryScreen';
 import MyGallery from './components/ImageGalleryScreen';
-import { getDBConnection, setupDatabaseTables } from './DataBase/db';
+import { createMarksTable, dropMarksTable, getDBConnection, setupDatabaseTables } from './DataBase/db';
 import HelpGuide from './components/Help';
 import Splash from './components/SplashScreen';
 import LottieView from 'lottie-react-native';
@@ -35,6 +35,7 @@ import EditMarks from './components/EditMarks';
 import Schedule from './components/Schedule';
 import AddClassTime from './components/AddClassTime';
 import EditClassTime from './components/EditClassTime';
+import GPAnalysis from './components/GPAnalysis';
 
 const Stack = createStackNavigator();
 const TabNav = () => (
@@ -137,6 +138,7 @@ const StackNav = () => (
     <Stack.Screen name="Schedule" component={Schedule} />
     <Stack.Screen name="AddClassTime" component={AddClassTime} />
     <Stack.Screen name="EditClassTime" component={EditClassTime} />
+    <Stack.Screen name="GPAnalysis" component={GPAnalysis} />
   </Stack.Navigator>
 );
 
@@ -168,6 +170,7 @@ export default () => {
   useEffect(() => {
     const initDB = async () => {
       try {
+      
         await setupDatabaseTables();
 
         console.log('Tables created successfully');

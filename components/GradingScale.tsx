@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { StyleSheet, View, ScrollView } from 'react-native';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { StyleSheet, View, ScrollView, BackHandler } from 'react-native';
 import {
   Text,
   Button,
@@ -21,6 +21,7 @@ import {
 import { ModalKitten, ModalKittenHandle } from './Modal';
 import Loader from './Loader';
 import FontAwesome6 from '@react-native-vector-icons/fontawesome6';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 type GradingScale = {
   id: number;
@@ -54,6 +55,24 @@ const GradingScaleScreen = (): React.ReactElement => {
   const [loading, setLoading] = useState(false);
   const modalRef = useRef<ModalKittenHandle>(null);
   const [confirmVisible, setConfirmVisible] = useState(false);
+  const navigation = useNavigation<any>();
+  
+    useFocusEffect(
+             useCallback(() => {
+               const onBackPress = () => {
+                 // 👇 Back press → go to "Home" screen
+                 navigation.navigate('MainTabs', { screen: 'Tools' });  
+                 return true; // default back ko cancel kar do
+               };
+         
+               const subscription = BackHandler.addEventListener(
+                 'hardwareBackPress',
+                 onBackPress
+               );
+         
+               return () => subscription.remove();
+             }, [navigation])
+           );
   // initial load
   useEffect(() => {
     (async () => {

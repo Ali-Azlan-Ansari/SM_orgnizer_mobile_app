@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   StyleSheet,
   View,
@@ -6,6 +6,7 @@ import {
   PermissionsAndroid,
   Alert,
   Linking,
+  BackHandler,
 } from 'react-native';
 import {
   Layout,
@@ -24,6 +25,7 @@ import { ModalKitten, ModalKittenHandle } from './Modal';
 import { backgroundColor, baseBGColor } from './Color';
 import Loader from './Loader';
 import FileViewer from 'react-native-file-viewer';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 // ✅ ICONS
 const RenameIcon = () => (
@@ -61,8 +63,24 @@ const PdfManager = () => {
   const [selectedPdf, setSelectedPdf] = useState<PdfFile | null>(null);
   const [loading, setLoading] = useState(false);
   const [renameError, setRenameError] = useState<string>('');
-
   const modalRef = useRef<ModalKittenHandle>(null);
+  const navigation = useNavigation<any>();
+   useFocusEffect(
+         useCallback(() => {
+           const onBackPress = () => {
+             // 👇 Back press → go to "Home" screen
+             navigation.navigate('MainTabs', { screen: 'Tools' });  
+             return true; // default back ko cancel kar do
+           };
+     
+           const subscription = BackHandler.addEventListener(
+             'hardwareBackPress',
+             onBackPress
+           );
+     
+           return () => subscription.remove();
+         }, [navigation])
+       );
 
   const downloadPath =
     Platform.OS === 'android'

@@ -111,6 +111,8 @@ export const createMarksTable = async (db: SQLiteDatabase): Promise<void> => {
       total_marks REAL CHECK(total_marks >= 0),
       obtained_marks REAL CHECK(obtained_marks >= 0),
       credit_hour INTEGER CHECK(credit_hour > 0),
+      year INTEGER CHECK(year >= 0),
+      semester INTEGER CHECK(semester >= 0),
       date TEXT
     );
   `;
@@ -358,14 +360,16 @@ export const deleteImagesByUri = async (db: SQLiteDatabase, uris: string[]) => {
 // 2️⃣ ADD MARK
 export const addMark = async (db: SQLiteDatabase, mark: Mark): Promise<void> => {
   const query = `
-    INSERT INTO marks (subject_name, total_marks, obtained_marks, credit_hour, date)
-    VALUES (?, ?, ?, ?, ?);
+    INSERT INTO marks (subject_name, total_marks, obtained_marks, credit_hour, year, semester, date)
+    VALUES (?, ?, ?, ?, ?, ?, ?);
   `;
   const values = [
     mark.subject_name,
     mark.total_marks,
     mark.obtained_marks,
     mark.credit_hour,
+    mark.year,
+    mark.semester,
     mark.date ?? new Date().toISOString(),
   ];
   await db.executeSql(query, values);
@@ -395,7 +399,7 @@ export const getMarkById = async (db: SQLiteDatabase, id: number): Promise<Mark 
 export const updateMark = async (db: SQLiteDatabase, id: number, mark: Mark): Promise<void> => {
   const query = `
     UPDATE marks
-    SET subject_name = ?, total_marks = ?, obtained_marks = ?, credit_hour = ?, date = ?
+    SET subject_name = ?, total_marks = ?, obtained_marks = ?, credit_hour = ?, year = ?, semester = ?, date = ?
     WHERE id = ?;
   `;
   const values = [
@@ -403,6 +407,8 @@ export const updateMark = async (db: SQLiteDatabase, id: number, mark: Mark): Pr
     mark.total_marks,
     mark.obtained_marks,
     mark.credit_hour,
+    mark.year,
+    mark.semester,
     mark.date ?? new Date().toISOString(),
     id,
   ];
@@ -481,6 +487,76 @@ export const deleteSchedule = async (db: SQLiteDatabase, id: number) => {
   await db.executeSql(`DELETE FROM Schedule WHERE id = ?`, [id]);
 };
 
+
+export const getMarksByYear = async (
+  db: SQLiteDatabase,
+  year: number,
+): Promise<any[]> => {
+  const results: any[] = [];
+  const query = `SELECT * FROM marks WHERE year = ?`;
+  const res = await db.executeSql(query, [year]);
+  // res[0] = first ResultSet
+  const rows = res[0].rows;
+  for (let i = 0; i < rows.length; i++) {
+    results.push(rows.item(i));
+  }
+  return results;
+};
+
+// 2. Get marks by semester (optionally filter by year too)
+export const getMarksBySemester = async (
+  db: SQLiteDatabase,
+  semester: number,
+  year?: number,
+): Promise<any[]> => {
+  const results: any[] = [];
+  let query = `SELECT * FROM marks WHERE semester = ?`;
+  let params: any[] = [semester];
+  if (year !== undefined) {
+    query += ' AND year = ?';
+    params.push(year);
+  }
+  const res = await db.executeSql(query, params);
+  const rows = res[0].rows;
+  for (let i = 0; i < rows.length; i++) {
+    results.push(rows.item(i));
+  }
+  return results;
+};
+
+// 3. Get all available years (distinct, no duplicates)
+export const getAvailableYears = async (db: SQLiteDatabase): Promise<number[]> => {
+  const years: number[] = [];
+  const query = `SELECT DISTINCT year FROM marks WHERE year IS NOT NULL ORDER BY year`;
+  const res = await db.executeSql(query);
+  const rows = res[0].rows;
+  for (let i = 0; i < rows.length; i++) {
+    years.push(rows.item(i).year);
+  }
+  return years;
+};
+
+// 4. Get all available semesters (distinct, no duplicates)
+export const getAvailableSemesters = async (
+  db: SQLiteDatabase,
+  year?: number,
+): Promise<number[]> => {
+  const semesters: number[] = [];
+  let query = `SELECT DISTINCT semester FROM marks WHERE semester IS NOT NULL`;
+  const params: any[] = [];
+  if (year !== undefined) {
+    query += ' AND year = ?';
+    params.push(year);
+  }
+  query += ' ORDER BY semester';
+  const res = await db.executeSql(query, params);
+  const rows = res[0].rows;
+  for (let i = 0; i < rows.length; i++) {
+    semesters.push(rows.item(i).semester);
+  }
+  return semesters;
+};
+
 export type Schedule = {
   id?: number;
   day: string; // mon, tue, etc.
@@ -507,5 +583,7 @@ export interface Mark {
   total_marks: number;
   obtained_marks: number;
   credit_hour: number;
+  year: number;        // new field
+  semester: number;    // new field
   date?: string;
 }

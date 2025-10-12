@@ -1,5 +1,5 @@
 // MarksManager.tsx
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { BackHandler, StyleSheet, View } from 'react-native';
 import {
   Layout,
@@ -12,7 +12,7 @@ import {
   Card,
 } from '@ui-kitten/components';
 import FontAwesome6 from '@react-native-vector-icons/fontawesome6';
-import { useNavigation, useIsFocused } from '@react-navigation/native';
+import { useNavigation, useIsFocused, useFocusEffect } from '@react-navigation/native';
 import {
   getDBConnection,
   getAllMarks,
@@ -55,6 +55,23 @@ export default function GpaProgress() {
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
 
+   useFocusEffect(
+           useCallback(() => {
+             const onBackPress = () => {
+               // 👇 Back press → go to "Home" screen
+               navigation.navigate('MainTabs', { screen: 'Tools' });  
+               return true; // default back ko cancel kar do
+             };
+       
+             const subscription = BackHandler.addEventListener(
+               'hardwareBackPress',
+               onBackPress
+             );
+       
+             return () => subscription.remove();
+           }, [navigation])
+         );
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -86,7 +103,7 @@ export default function GpaProgress() {
       if (isFocused) {
         // only when this screen is active
         navigation.navigate('MainTabs', {
-          screen: 'Tools', 
+          screen: 'Tools',
         });
         return true; // block default back
       }
@@ -186,6 +203,7 @@ export default function GpaProgress() {
 
   const DonutChart = () => {
     // compute gpa and highest grade
+    debugger
     const gpa = calGpa();
     const highest = highestGrade();
 
@@ -193,7 +211,7 @@ export default function GpaProgress() {
     const percent = highest > 0 ? (gpa / highest) * 100 : 0;
 
     // pick color based on percent
-    let color = '#FF4C4C'; // more vivid red
+   let color = '#FF4C4C'; // more vivid red
     if (percent >= 80) color = '#00C853'; // dark green
     else if (percent >= 70) color = '#69F0AE'; // light green
     else if (percent >= 50) color = '#FFD600'; // yellow
@@ -207,6 +225,13 @@ export default function GpaProgress() {
           paddingVertical: 10,
         }}
       >
+        <View style={styles.trap}>
+          <Button onPress={()=>{
+             navigation.navigate('GPAnalysis')
+          }} style={styles.tbtn} status='success' size="tiny">
+            Analysis
+          </Button>
+        </View>
         <PieChart
           donut
           radius={100}
@@ -226,14 +251,14 @@ export default function GpaProgress() {
           )}
         />
       </View>
-    );
+    ); 
   };
 
   return (
     <>
-    <View>
-                  <TopNavigationAccessoriesShowcase title="GPA Progress" />
-    </View>
+      <View>
+        <TopNavigationAccessoriesShowcase title="GPA Progress" />
+      </View>
       <Layout style={styles.mainContainer}>
         <DonutChart />
         <View style={styles.topBar}>
@@ -341,4 +366,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#212b46',
   },
+  trap: { display: 'flex', alignItems: 'flex-end', justifyContent: 'center',width:'100%' },
+  tbtn: { margin: 2 },
 });

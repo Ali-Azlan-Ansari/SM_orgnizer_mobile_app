@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { View, StyleSheet, ScrollView, Platform } from 'react-native';
+import React, { useState, useRef, useCallback } from 'react';
+import { View, StyleSheet, ScrollView, Platform, BackHandler } from 'react-native';
 import {
   Input,
   Text,
@@ -14,7 +14,7 @@ import { baseBGColor } from './Color';
 import { getDBConnection, insertSchedule } from '../DataBase/db';
 import { ModalKitten, ModalKittenHandle } from './Modal';
 import Loader from './Loader';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 const days = [
   'Monday',
@@ -37,6 +37,23 @@ const AddClassTime = (): React.ReactElement => {
   const [loading, setLoading] = useState(false);
   const modalRef = useRef<ModalKittenHandle>(null);
   const navigation = useNavigation<any>();
+
+    useFocusEffect(
+                   useCallback(() => {
+                     const onBackPress = () => {
+                       // 👇 Back press → go to "Home" screen
+                       navigation.navigate('Schedule');  
+                       return true; // default back ko cancel kar do
+                     };
+               
+                     const subscription = BackHandler.addEventListener(
+                       'hardwareBackPress',
+                       onBackPress
+                     );
+               
+                     return () => subscription.remove();
+                   }, [navigation])
+                 );
 
   const handlePress = (msg: string, time: number, status: string) => {
     modalRef.current?.show(msg, time, status);
@@ -205,3 +222,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
+function onBackPress(): boolean | null | undefined {
+  throw new Error('Function not implemented.');
+}
+

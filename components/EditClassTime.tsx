@@ -1,5 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, ScrollView, Platform } from 'react-native';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Platform,
+  BackHandler,
+} from 'react-native';
 import {
   Input,
   Text,
@@ -18,7 +24,7 @@ import {
 } from '../DataBase/db';
 import { ModalKitten, ModalKittenHandle } from './Modal';
 import Loader from './Loader';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 
 const days = [
   'Monday',
@@ -44,24 +50,41 @@ const EditClassTime = ({ route }: any): React.ReactElement => {
   const modalRef = useRef<ModalKittenHandle>(null);
   const navigation = useNavigation<any>();
 
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        // 👇 Back press → go to "Home" screen
+        navigation.navigate('Schedule');
+        return true; // default back ko cancel kar do
+      };
+
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBackPress,
+      );
+
+      return () => subscription.remove();
+    }, [navigation]),
+  );
+
   const handlePress = (msg: string, time: number, status: string) =>
     modalRef.current?.show(msg, time, status);
 
   // helper to parse db time strings into Date
- const stringToDate = (timeString: string): Date => {
-  // timeString like "7:22:13 PM"
-  const [time, modifier] = timeString.split(' ');
-  let [hours, minutes, seconds] = time.split(':').map(Number);
+  const stringToDate = (timeString: string): Date => {
+    // timeString like "7:22:13 PM"
+    const [time, modifier] = timeString.split(' ');
+    let [hours, minutes, seconds] = time.split(':').map(Number);
 
-  if (modifier === 'PM' && hours < 12) hours += 12;
-  if (modifier === 'AM' && hours === 12) hours = 0;
+    if (modifier === 'PM' && hours < 12) hours += 12;
+    if (modifier === 'AM' && hours === 12) hours = 0;
 
-  const hh = hours.toString().padStart(2, '0');
-  const mm = minutes.toString().padStart(2, '0');
-  const ss = (seconds ?? 0).toString().padStart(2, '0');
+    const hh = hours.toString().padStart(2, '0');
+    const mm = minutes.toString().padStart(2, '0');
+    const ss = (seconds ?? 0).toString().padStart(2, '0');
 
-  return new Date(`1970-01-01T${hh}:${mm}:${ss}`);
-};
+    return new Date(`1970-01-01T${hh}:${mm}:${ss}`);
+  };
 
   // load existing schedule
   useEffect(() => {
@@ -75,8 +98,8 @@ const EditClassTime = ({ route }: any): React.ReactElement => {
         setSelectedDayIndex(new IndexPath(idx >= 0 ? idx : 0));
         setStartTime(stringToDate(sch.start_time));
         setEndTime(stringToDate(sch.end_time));
-        console.log(startTime)
-          console.log(endTime)
+        console.log(startTime);
+        console.log(endTime);
       }
       setLoading(false);
     };
@@ -109,7 +132,6 @@ const EditClassTime = ({ route }: any): React.ReactElement => {
     <View style={styles.container}>
       <TopNavigationAccessoriesShowcase title="Edit Class Time" />
       <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
-
         <Text category="label" style={styles.label}>
           Subject
         </Text>
@@ -168,9 +190,7 @@ const EditClassTime = ({ route }: any): React.ReactElement => {
         <Button style={styles.button} onPress={() => setShowEnd(true)}>
           Pick End Time
         </Button>
-        <Text style={styles.timeText}>
-          End: {endTime.toLocaleTimeString()}
-        </Text>
+        <Text style={styles.timeText}>End: {endTime.toLocaleTimeString()}</Text>
         {showEnd && (
           <DateTimePicker
             value={endTime}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,12 @@ import {
   ScrollView,
   Dimensions,
   TouchableWithoutFeedback,
+  BackHandler,
 } from 'react-native';
 import { SafeAreaView } from 'react-native';
 import { baseBGColor, primaryColor } from './Color';
 import { TopNavigationAccessoriesShowcase } from './TopNavigationAccessoriesShowcase';
-import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused, useNavigation } from '@react-navigation/native';
 import { getActiveSubjects, getDBConnection, Subject } from '../DataBase/db';
 import Loader from './Loader';
 
@@ -19,6 +20,25 @@ const ActiveSubject = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
+
+
+useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        // 👇 Back button press → close app
+        BackHandler.exitApp();
+        return true; // prevent default
+      };
+
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBackPress
+      );
+
+      return () => subscription.remove();
+    }, [])
+  );
+
   
   useEffect(() => {
     const fetchActiveSubjects = async () => {

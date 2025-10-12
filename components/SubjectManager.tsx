@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { BackHandler, StyleSheet, View } from 'react-native';
 import {
   Layout,
   Input,
@@ -13,7 +13,7 @@ import {
 } from '@ui-kitten/components';
 import FontAwesome6 from '@react-native-vector-icons/fontawesome6';
 import { TopNavigationAccessoriesShowcase } from './TopNavigationAccessoriesShowcase';
-import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused, useNavigation } from '@react-navigation/native';
 import {
   deleteSubjectById,
   getAllSubjects,
@@ -49,6 +49,23 @@ const SubjectManager = () => {
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
   const modalRef = useRef<ModalKittenHandle>(null);
+
+   useFocusEffect(
+      useCallback(() => {
+        const onBackPress = () => {
+          // 👇 Back press → go to "Home" screen
+          navigation.navigate('Active');  
+          return true; // default back ko cancel kar do
+        };
+  
+        const subscription = BackHandler.addEventListener(
+          'hardwareBackPress',
+          onBackPress
+        );
+  
+        return () => subscription.remove();
+      }, [navigation])
+    );
 
   const fetchData = async () => {
     try {

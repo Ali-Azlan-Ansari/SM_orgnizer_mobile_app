@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,6 +9,7 @@ import {
   PermissionsAndroid,
   Linking,
   Alert,
+  BackHandler,
 } from 'react-native';
 import ImageView from 'react-native-image-viewing';
 import { TopNavigationAccessoriesShowcase } from './TopNavigationAccessoriesShowcase';
@@ -18,7 +19,7 @@ import FontAwesome6 from '@react-native-vector-icons/fontawesome6';
 import RNHTMLtoPDF from 'react-native-html-to-pdf';
 import RNFS from 'react-native-fs';
 import FileViewer from 'react-native-file-viewer';
-import { useIsFocused, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import {
   deleteImagesByUri,
   getDBConnection,
@@ -71,10 +72,26 @@ const MyGallery = () => {
   const [nameModalVisible, setNameModalVisible] = useState(false); // <-- added
   const [pdfNameInput, setPdfNameInput] = useState(''); // <-- added
   const [pdfNameError, setPdfNameError] = useState(''); // <-- added
-
   const isFocused = useIsFocused();
-
-   const modalRef = useRef<ModalKittenHandle>(null);
+  const modalRef = useRef<ModalKittenHandle>(null);
+  const navigation = useNavigation<any>();
+   
+    useFocusEffect(
+       useCallback(() => {
+         const onBackPress = () => {
+           // 👇 Back press → go to "Home" screen
+           navigation.navigate('MainTabs', { screen: 'Active' });  
+           return true; // default back ko cancel kar do
+         };
+   
+         const subscription = BackHandler.addEventListener(
+           'hardwareBackPress',
+           onBackPress
+         );
+   
+         return () => subscription.remove();
+       }, [navigation])
+     );
 
   useEffect(() => {
     if (isFocused) {

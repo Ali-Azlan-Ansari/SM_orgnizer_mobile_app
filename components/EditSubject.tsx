@@ -1,11 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, View, ScrollView, Alert } from 'react-native';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { StyleSheet, View, ScrollView, Alert, BackHandler } from 'react-native';
 import { Input, Text, Button } from '@ui-kitten/components';
 import { TopNavigationAccessoriesShowcase } from './TopNavigationAccessoriesShowcase';
 import { baseBGColor } from './Color';
 import { getDBConnection, getSubjectById, updateSubject } from '../DataBase/db';
 import { ModalKitten, ModalKittenHandle } from './Modal';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import Loader from './Loader'; // <-- import your loader
 
 const EditSubject = ({ route }: any): React.ReactElement => {
@@ -25,6 +25,23 @@ const EditSubject = ({ route }: any): React.ReactElement => {
 
   const modalRef = useRef<ModalKittenHandle>(null);
   const navigation = useNavigation<any>();
+
+    useFocusEffect(
+                 useCallback(() => {
+                   const onBackPress = () => {
+                     // 👇 Back press → go to "Home" screen
+                     navigation.navigate('MainTabs', { screen: 'Subject' });  
+                     return true; // default back ko cancel kar do
+                   };
+             
+                   const subscription = BackHandler.addEventListener(
+                     'hardwareBackPress',
+                     onBackPress
+                   );
+             
+                   return () => subscription.remove();
+                 }, [navigation])
+               );
 
   const handlePress = (message: string, time: number, status: string) => {
     modalRef.current?.show(message, time, status);
