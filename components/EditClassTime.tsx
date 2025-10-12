@@ -98,8 +98,7 @@ const EditClassTime = ({ route }: any): React.ReactElement => {
         setSelectedDayIndex(new IndexPath(idx >= 0 ? idx : 0));
         setStartTime(stringToDate(sch.start_time));
         setEndTime(stringToDate(sch.end_time));
-        console.log(startTime);
-        console.log(endTime);
+      
       }
       setLoading(false);
     };

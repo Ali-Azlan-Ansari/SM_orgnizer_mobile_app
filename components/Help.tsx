@@ -3,6 +3,7 @@ import { StyleSheet, View, ScrollView, Linking, Alert, Platform, BackHandler } f
 import { Layout, Card, Text, Button } from '@ui-kitten/components';
 import FontAwesome6 from '@react-native-vector-icons/fontawesome6';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { TopNavigationAccessoriesShowcase } from './TopNavigationAccessoriesShowcase';
 
 const Step = ({ number, title, description, iconName }: any) => (
   <Card style={styles.card}>
@@ -90,7 +91,10 @@ const HelpGuide = () => {
   };
 
   return (
-    <Layout style={styles.container}>
+     <><TopNavigationAccessoriesShowcase title="Help" /><Layout style={styles.container}>
+
+
+
       <ScrollView contentContainerStyle={styles.scroll}>
         <Card style={styles.card}>
           <Text category="h6" style={{ marginBottom: 6 }}>Found a problem?</Text>
@@ -111,7 +115,7 @@ const HelpGuide = () => {
           <Button style={styles.reportButton} onPress={sendUserQuery}>Contact Support</Button>
         </Card>
       </ScrollView>
-    </Layout>
+    </Layout></>
   );
 };
 

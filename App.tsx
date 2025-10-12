@@ -173,7 +173,6 @@ export default () => {
       
         await setupDatabaseTables();
 
-        console.log('Tables created successfully');
       } catch (error) {
         console.error('Error setting up database:', error);
       }

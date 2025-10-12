@@ -203,7 +203,7 @@ export const deleteSubjectById =async (db: SQLiteDatabase, subjectId: number): P
         const exists = await RNFS.exists(uri);
         if (exists) {
           await RNFS.unlink(uri);
-          console.log(`Deleted file: ${uri}`);
+      
         }
       } catch (err) {
         console.error(`File delete error (${uri}):`, err);
@@ -213,7 +213,6 @@ export const deleteSubjectById =async (db: SQLiteDatabase, subjectId: number): P
     // 3. Subject delete karo → images DB se auto-delete (CASCADE)
     await db.executeSql(`DELETE FROM subject WHERE id = ?;`, [subjectId]);
 
-    console.log(`✅ Subject ${subjectId} and its images deleted`);
   } catch (err) {
     console.error('Delete subject and images error:', err);
     throw err;
@@ -336,7 +335,7 @@ export const deleteImagesByUri = async (db: SQLiteDatabase, uris: string[]) => {
       const existsPlain = await RNFS.exists(cleanPath);
       if (existsPlain) {
         await RNFS.unlink(cleanPath);
-        console.log(`Deleted file: ${cleanPath}`);
+      
         continue;
       }
 
@@ -344,11 +343,11 @@ export const deleteImagesByUri = async (db: SQLiteDatabase, uris: string[]) => {
       const existsPrefixed = await RNFS.exists(withFilePrefix);
       if (existsPrefixed) {
         await RNFS.unlink(withFilePrefix);
-        console.log(`Deleted file (prefixed): ${withFilePrefix}`);
+      
         continue;
       }
 
-      console.log(`File not found (not deleted): ${cleanPath}`);
+
     } catch (error) {
       console.error('File delete error:', error);
     }

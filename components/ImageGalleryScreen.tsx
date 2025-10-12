@@ -330,9 +330,7 @@ const MyGallery = () => {
       };
 
       const file = await RNHTMLtoPDF.convert(options);
-      console.log('====================================');
-      console.log(file.filePath);
-      console.log('====================================');
+   
 
       // show PDF opener modal instead of alert
       setLastSavedPdfPath(file.filePath ?? null);
@@ -466,7 +464,7 @@ const MyGallery = () => {
       try {
         await RNFS.copyFile(srcPath, destPath); // ✅ copy instead of move
         newPaths.push(destPath);
-        console.log(`Copied: ${srcPath} -> ${destPath}`);
+      
       } catch (err) {
         console.error('Copy error:', err);
       }

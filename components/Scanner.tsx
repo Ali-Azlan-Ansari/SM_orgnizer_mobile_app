@@ -213,7 +213,6 @@ export const Scanner = () => {
       try {
         await RNFS.copyFile(srcPath, destPath); // ✅ copy instead of move
         newPaths.push(destPath);
-        console.log(`Copied: ${srcPath} -> ${destPath}`);
       } catch (err) {
         console.error('Copy error:', err);
       }

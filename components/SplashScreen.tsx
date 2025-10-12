@@ -68,26 +68,9 @@ const Splash: React.FC<SplashProps> = ({
           source={require('./assets/animation.json')}
           autoPlay
           loop={true}
-          resizeMode="cover"
+          resizeMode='contain'
           style={styles.animation}
         />
-        <View style={styles.textWrapper}>
-          <Animated.Text style={[styles.title, { opacity: titleOpacity }]}>
-            <Text style={styles.study}>Study</Text>{' '}
-            <Text style={styles.material}>Material</Text>{' '}
-            <Animated.Text
-              style={[
-                styles.organizer,
-                { transform: [{ scale: organizerScale }] },
-              ]}
-            >
-              Organizer
-            </Animated.Text>
-          </Animated.Text>
-          <Animated.Text style={[styles.tagline, { opacity: taglineOpacity }]}>
-            Organize. Learn. Succeed.
-          </Animated.Text>
-        </View>
       </View>
     </SafeAreaView>
   );
