@@ -1,76 +1,85 @@
-import React, { Dispatch, SetStateAction, useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated, Text, SafeAreaView, Platform } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import {
+  View,
+  StyleSheet,
+  Animated,
+  Text,
+  SafeAreaView,
+  Platform,
+  Dimensions,
+} from 'react-native';
 import LottieView from 'lottie-react-native';
 
 interface SplashProps {
-  setIsLoading: Dispatch<SetStateAction<boolean>>;
-  appName?: string;
+  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const Splash: React.FC<SplashProps> = ({
-  setIsLoading,
-  appName = 'Study Material Organizer',
-}) => {
+const Splash: React.FC<SplashProps> = ({ setIsLoading }) => {
   const titleOpacity = useRef(new Animated.Value(0)).current;
-  const taglineOpacity = useRef(new Animated.Value(0)).current;
-  const organizerScale = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
   const mountedRef = useRef(true);
+  const { height } = Dimensions.get('window');
 
   useEffect(() => {
-    // parallel: title & tagline (staggered), plus pulse
+    // Fade-in & pulse animation
     Animated.parallel([
       Animated.timing(titleOpacity, {
         toValue: 1,
-        duration: 150,
-        delay: 0,
+        duration: 600,
+        delay: 400,
         useNativeDriver: true,
       }),
-      Animated.timing(taglineOpacity, {
-        toValue: 1,
-        duration: 150,
-        delay: 100, // slight stagger but still within 1s
-        useNativeDriver: true,
-      }),
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(scaleAnim, {
+            toValue: 1.05,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scaleAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+        ])
+      ),
     ]).start();
 
-    const pulse = Animated.loop(
-      Animated.sequence([
-        Animated.timing(organizerScale, {
-          toValue: 1.08,
-          duration: 120,
-          useNativeDriver: true,
-        }),
-        Animated.timing(organizerScale, {
-          toValue: 1,
-          duration: 80,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-    pulse.start();
-
-    // exactly 1s then finish loading
-    const fallback = setTimeout(() => {
+    // Timeout for navigation or hiding splash
+    const timeout = setTimeout(() => {
       if (mountedRef.current) setIsLoading(false);
-    }, 1000);
+    }, 2000);
 
     return () => {
       mountedRef.current = false;
-      clearTimeout(fallback);
-      pulse.stop();
+      clearTimeout(timeout);
     };
-  }, [titleOpacity, taglineOpacity, organizerScale, setIsLoading]);
+  }, [titleOpacity, scaleAnim, setIsLoading]);
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
+        {/* Animation */}
         <LottieView
           source={require('./assets/animation.json')}
           autoPlay
-          loop={true}
-          resizeMode='contain'
-          style={styles.animation}
+          loop
+          resizeMode="contain"
+          style={[styles.animation, { height: height * 0.35, width: height * 0.35 }]}
         />
+
+        {/* App Name Text */}
+        <Animated.Text
+          style={[
+            styles.title,
+            {
+              opacity: titleOpacity,
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
+          SM Organizer
+        </Animated.Text>
       </View>
     </SafeAreaView>
   );
@@ -80,23 +89,15 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: '#212b46',
+    paddingTop: Platform.OS === 'android' ? 30 : 0, // Safe for Android notch
   },
   container: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#212b46',
+    alignItems: 'center',
   },
   animation: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
-  },
-  textWrapper: {
-    position: 'absolute',
-    bottom: 100,
-    alignItems: 'center',
-    paddingHorizontal: 24,
+    marginBottom: 40,
   },
   title: {
     fontSize: 34,
@@ -105,25 +106,8 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.4)',
     textShadowOffset: { width: 0, height: 3 },
     textShadowRadius: 6,
-    flexWrap: 'wrap',
-  },
-  study: {
-    color: '#ffa500',
-   
-  },
-  material: {
-    color: '#ffa500',
-   
-  },
-  organizer: {
-    color: '#ffa500',
-  
-  },
-  tagline: {
-    fontSize: 16,
-    marginTop: 6,
-    fontStyle: 'italic',
-    color: '#ffa500',
+    color: '#ffffff',
+    letterSpacing: 1,
   },
 });
 

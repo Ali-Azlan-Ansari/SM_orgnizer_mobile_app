@@ -56,23 +56,27 @@ const GradingScaleScreen = (): React.ReactElement => {
   const modalRef = useRef<ModalKittenHandle>(null);
   const [confirmVisible, setConfirmVisible] = useState(false);
   const navigation = useNavigation<any>();
-  
-    useFocusEffect(
-             useCallback(() => {
-               const onBackPress = () => {
-                 // 👇 Back press → go to "Home" screen
-                 navigation.navigate('MainTabs', { screen: 'Tools' });  
-                 return true; // default back ko cancel kar do
-               };
-         
-               const subscription = BackHandler.addEventListener(
-                 'hardwareBackPress',
-                 onBackPress
-               );
-         
-               return () => subscription.remove();
-             }, [navigation])
-           );
+
+  // 🔹 Local state for temporary editing values
+  const [editingValues, setEditingValues] = useState<Record<string, string>>({});
+  const keyFor = (id: number, field: string) => `${id}_${field}`;
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        navigation.navigate('MainTabs', { screen: 'Tools' });
+        return true;
+      };
+
+      const subscription = BackHandler.addEventListener(
+        'hardwareBackPress',
+        onBackPress,
+      );
+
+      return () => subscription.remove();
+    }, [navigation]),
+  );
+
   // initial load
   useEffect(() => {
     (async () => {
@@ -118,15 +122,42 @@ const GradingScaleScreen = (): React.ReactElement => {
     );
   };
 
+  // 🔹 Handle numeric change (keep as string while typing)
+  const handleNumericChange = (id: number, field: keyof GradingScale, val: string) => {
+    const sanitized = val.replace(/[^0-9.]/g, '');
+    const parts = sanitized.split('.');
+    if (parts.length > 2) return;
+    setEditingValues(prev => ({ ...prev, [keyFor(id, field)]: sanitized }));
+  };
+
+  // 🔹 Finalize numeric value on blur
+  const finalizeNumeric = (id: number, field: keyof GradingScale, current: number) => {
+    const k = keyFor(id, field);
+    const str = editingValues[k] ?? String(current ?? '');
+    const num = parseFloat(str);
+    if (!isNaN(num)) {
+      updateField(id, field, num);
+      setEditingValues(prev => ({ ...prev, [k]: String(num) }));
+    } else {
+      setEditingValues(prev => ({ ...prev, [k]: '' }));
+      updateField(id, field, 0);
+    }
+  };
+
+  // 🔹 Display value helper
+  const getDisplayValue = (id: number, field: keyof GradingScale, value: number) => {
+    const k = keyFor(id, field);
+    if (editingValues[k] !== undefined) return editingValues[k];
+    return value !== undefined && value !== null ? String(value) : '';
+  };
+
   const handleSaveChanges = async () => {
     try {
       setLoading(true);
       const db = await getDBConnection();
 
-      // 1 delete all
       await deleteAllGradingScales(db);
 
-      // 2 insert current data
       const toInsert = data.map(d => ({
         min_mark: d.min_mark,
         max_mark: d.max_mark,
@@ -134,11 +165,10 @@ const GradingScaleScreen = (): React.ReactElement => {
         grade_points: d.grade_points,
       }));
       await insertGradingScales(db, toInsert);
-    
-      // 3 reload
+
       const rows = await getAllGradingScales(db);
       setData(rows);
-      setConfirmVisible(false)
+      setConfirmVisible(false);
 
       modalRef.current?.show('Changes saved successfully!', 2000, 'success');
     } catch (err) {
@@ -182,23 +212,22 @@ const GradingScaleScreen = (): React.ReactElement => {
 
             <Input
               label="Max Mark"
-              value={String(item.max_mark)}
+              value={getDisplayValue(item.id, 'max_mark', item.max_mark)}
               keyboardType="numeric"
               style={styles.input}
               textStyle={styles.inputText}
-              onChangeText={val =>
-                updateField(item.id, 'max_mark', Number(val))
-              }
+              onChangeText={val => handleNumericChange(item.id, 'max_mark', val)}
+              onBlur={() => finalizeNumeric(item.id, 'max_mark', item.max_mark)}
             />
+
             <Input
               label="Min Mark"
-              value={String(item.min_mark)}
+              value={getDisplayValue(item.id, 'min_mark', item.min_mark)}
               keyboardType="numeric"
               style={styles.input}
               textStyle={styles.inputText}
-              onChangeText={val =>
-                updateField(item.id, 'min_mark', Number(val))
-              }
+              onChangeText={val => handleNumericChange(item.id, 'min_mark', val)}
+              onBlur={() => finalizeNumeric(item.id, 'min_mark', item.min_mark)}
             />
 
             <Select
@@ -220,13 +249,12 @@ const GradingScaleScreen = (): React.ReactElement => {
 
             <Input
               label="Grade Points"
-              value={String(item.grade_points)}
+              value={getDisplayValue(item.id, 'grade_points', item.grade_points)}
               keyboardType="numeric"
               style={styles.input}
               textStyle={styles.inputText}
-              onChangeText={val =>
-                updateField(item.id, 'grade_points', Number(val))
-              }
+              onChangeText={val => handleNumericChange(item.id, 'grade_points', val)}
+              onBlur={() => finalizeNumeric(item.id, 'grade_points', item.grade_points)}
             />
           </Card>
         ))}
@@ -242,9 +270,7 @@ const GradingScaleScreen = (): React.ReactElement => {
         <Button
           style={styles.saveButton}
           status="primary"
-          onPress={() => {
-            setConfirmVisible(true);
-          }}
+          onPress={() => setConfirmVisible(true)}
         >
           Save Changes
         </Button>
@@ -255,9 +281,7 @@ const GradingScaleScreen = (): React.ReactElement => {
       <Modal
         visible={confirmVisible}
         backdropStyle={styles.backdrop}
-        onBackdropPress={() => {
-          setConfirmVisible(false);
-        }}
+        onBackdropPress={() => setConfirmVisible(false)}
       >
         <Card disabled={true} style={styles.confirmCard}>
           <Text category="h6" style={styles.confirmTitle}>
@@ -269,9 +293,7 @@ const GradingScaleScreen = (): React.ReactElement => {
           <View style={styles.confirmButtons}>
             <Button
               style={styles.confirmButton}
-              onPress={() => {
-                setConfirmVisible(false);
-              }}
+              onPress={() => setConfirmVisible(false)}
               appearance="outline"
               status="basic"
             >
