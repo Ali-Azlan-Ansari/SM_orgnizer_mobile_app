@@ -192,7 +192,7 @@ const HelpGuide = () => {
             </View>
 
             {/* 👇 QR Code */}
-            <View style={styles.qrContainer}>
+            {/* <View style={styles.qrContainer}>
               <QRCode
                 value={IBANQR}
                 size={130}
@@ -202,7 +202,7 @@ const HelpGuide = () => {
               <Text appearance="hint" style={styles.qrText}>
                 Scan to Donate
               </Text>
-            </View>
+            </View> */}
 
             {/* 👇 Donate Link */}
             {/* <Button
